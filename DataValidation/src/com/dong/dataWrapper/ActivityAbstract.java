@@ -1,9 +1,9 @@
-package dataWrapper;
+package com.dong.dataWrapper;
 
-import utils.DoubleComparator;
+import com.dong.utils.DoubleComparator;
 
 public abstract class ActivityAbstract extends RecordAbstract {
-	private final String	_type, _tradeDate;
+	private final String	_tradeDate;	// date is in MM/dd/yyyy format
 	private double			_price;
 
 	/***********************************************************************
@@ -12,9 +12,8 @@ public abstract class ActivityAbstract extends RecordAbstract {
 	public ActivityAbstract(final String tradeDate, final String symbol, final String type, final String side,
 			final int qty, final double price,
 			final String description) {
-		super(symbol,side,qty,description);
+		super( symbol, type, side, qty, description );
 		_tradeDate = tradeDate;
-		_type = type;
 		_price = price;
 	}
 
@@ -28,7 +27,7 @@ public abstract class ActivityAbstract extends RecordAbstract {
 		if (!(record instanceof ActivityAbstract)) return false;
 		return (_tradeDate.equals( ((ActivityAbstract) record).getTradeDate() ) && // compare trade date
 				getSymbol().equals( ((ActivityAbstract) record).getSymbol() ) && // compare symbol
-				_type.equals( ((ActivityAbstract) record).getType() ) && // compare type
+				getType().equals( ((ActivityAbstract) record).getType() ) && // compare type
 				getSide().equals( ((ActivityAbstract) record).getSide() ) && // compare side
 				getQuantity() == ((ActivityAbstract) record).getQuantity() && // compare quantity
 				DoubleComparator.equal( _price, ((ActivityAbstract) record).getPrice(), 0.0001 ));// compare price
@@ -36,9 +35,9 @@ public abstract class ActivityAbstract extends RecordAbstract {
 
 	@Override
 	public int hashCode() {
-		return _tradeDate.hashCode() * 29 +  _type.hashCode() * 17 + (int) _price* 13 + super.hashCode();
+		return _tradeDate.hashCode() * 29 + (int) _price * 13 + super.hashCode();
 	}
-	
+
 	/***********************************************************************
 	 * Utilities
 	 ***********************************************************************/
@@ -50,19 +49,16 @@ public abstract class ActivityAbstract extends RecordAbstract {
 	}
 
 	private void updatePriceQty(final ActivityAbstract record) {
-		setPrice( (_price * getQuantity() + record.getPrice() * record.getQuantity()) / (getQuantity() + record.getQuantity()) );
+		setPrice( (_price * getQuantity() + record.getPrice() * record.getQuantity())
+				/ (getQuantity() + record.getQuantity()) );
 		setQuantity( getQuantity() + record.getQuantity() );
 	}
-	
+
 	/***********************************************************************
 	 * Getter and Setter
 	 ***********************************************************************/
 	public String getTradeDate() {
 		return _tradeDate;
-	}
-
-	public String getType() {
-		return _type;
 	}
 
 	public double getPrice() {

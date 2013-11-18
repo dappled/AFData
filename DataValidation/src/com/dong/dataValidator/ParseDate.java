@@ -1,4 +1,4 @@
-package utils;
+package com.dong.dataValidator;
 
 import java.text.NumberFormat;
 import java.util.Calendar;
@@ -103,7 +103,7 @@ public class ParseDate {
 	    int month = cal.get(Calendar.MONTH) + 1;
 	    int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
 
-	    if ((month == 12 && dayOfMonth == 25 && year == 2013) || (month == 11 && dayOfMonth == 28 && year == 2013)) {
+	    if ((month == 12 && dayOfMonth == 25) || (month == 11 && dayOfMonth == 28 && year == 2013)) {
 	        return true;
 	    }
 

@@ -1,4 +1,4 @@
-package dataValidation;
+package com.dong.dataValidator;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -17,23 +17,21 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import utils.ParseDate;
-import utils.Poi.PoiRecord;
-import utils.Poi.WriteXls;
-import dataWrapper.BrokerActivity;
-import dataWrapper.LocalActivity;
-import dataWrapper.RecordAbstract;
+import com.dong.dataWrapper.BrokerActivity;
+import com.dong.dataWrapper.LocalActivity;
+import com.dong.dataWrapper.RecordAbstract;
+import com.dong.utils.ParseDate;
+import com.dong.utils.poi.PoiRecord;
+import com.dong.utils.poi.WriteXls;
 
 public class ActivityValidator extends ValidatorBase {
 	public ActivityValidator() {}
 
 	/***********************************************************************
-	 * Utilities
-	 ***********************************************************************/
-	/***********************************************************************
-	 * Read GSEC file
+	 * {@link ValidatorBase} methods
 	 ***********************************************************************/
 	@Override
+	/** Read GSEC file */
 	protected List<List<RecordAbstract>> readBrokerFile(final String brokerFile, final String tradeDate) throws Exception {
 		final HashMap<RecordKey, BrokerActivity> gsMap = new HashMap<>(); // for normal equity and option b/s
 		final List<RecordAbstract> gsOtherDay = new ArrayList<>(); // other day stuff
@@ -142,10 +140,8 @@ public class ActivityValidator extends ValidatorBase {
 		return null;
 	}
 
-	/***********************************************************************
-	 * Read TradeSummary file
-	 ***********************************************************************/
 	@Override
+	/** Read TradeSummary file */
 	protected List<List<RecordAbstract>> readLocalFile(final String summaryFile, final String tradeDate)
 			throws Exception {
 		final HashMap<RecordKey, LocalActivity> summaryMap = new HashMap<>();
@@ -220,10 +216,9 @@ public class ActivityValidator extends ValidatorBase {
 		else throw new Exception( "TrdeValidator: Incorrect trade side in tradeSummary file" );
 	}
 
-	/***********************************************************************
-	 * Utilities
-	 ***********************************************************************/
+
 	@Override
+	/** export to xls file */
 	protected void exportXls(final String outFileName, 
 			final List<RecordAbstract> summaryDiffList, final List<RecordAbstract> GSECDiffList,
 			final List<RecordAbstract> summaryOtherDay, final List<RecordAbstract> GSECOtherDay,
@@ -310,7 +305,10 @@ public class ActivityValidator extends ValidatorBase {
 		row.createCell( 16 ).setCellValue( createHelper.createRichTextString( "Description" ) );
 	}
 
-	/** key features that distinguish a record to others */
+	/***********************************************************************
+	 * Utilities
+	 ***********************************************************************/
+	/** key features that distinguish record from each other */
 	private class RecordKey {
 		public String	_symbol;
 		public String	_type;

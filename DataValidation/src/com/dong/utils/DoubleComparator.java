@@ -1,4 +1,4 @@
-package utils;
+package com.dong.utils;
 
 public class DoubleComparator {
 

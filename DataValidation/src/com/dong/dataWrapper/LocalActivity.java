@@ -1,26 +1,24 @@
-package dataWrapper;
+package com.dong.dataWrapper;
 
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import utils.Poi.PoiRecord;
+import com.dong.utils.poi.PoiRecord;
 
 /**
- * Data structure that represents a single activity summary record
+ * Data structure that represents a single trade summary record
  * @author Zhenghong Dong
  */
-public class BrokerActivity extends ActivityAbstract {
-	private double _principal;
+public class LocalActivity extends ActivityAbstract {
 	/***********************************************************************
 	 * Constructor
 	 ***********************************************************************/
-	public BrokerActivity(final String tradeDate, final String symbol, final String type, final String side, final int qty, final double price,
-			final double principal, final String description) throws Exception {
-		super( tradeDate, symbol, type, side, qty, price, description );
-		_principal = principal;
+	public LocalActivity(final String date, final String symbol, final String type, final String side, final int qty,
+			final double price, final String description) throws Exception {
+		super( date, symbol, type, side, qty, price, description );
 	}
-	
+
 	/***********************************************************************
 	 * {@link PoiRecord} Methods
 	 ***********************************************************************/
@@ -34,7 +32,6 @@ public class BrokerActivity extends ActivityAbstract {
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getSide() ) );
 		row.createCell( i++ ).setCellValue( getQuantity() );
 		row.createCell( i++ ).setCellValue( getPrice() );
-		row.createCell( i++ ).setCellValue( getPrincipal() );
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getDescription() ) );
 	}
 	
@@ -42,19 +39,13 @@ public class BrokerActivity extends ActivityAbstract {
 	 * Utilities
 	 ***********************************************************************/
 	@Override
-	public void add(ActivityAbstract record) {
-		super.add(record);
-		_principal += ((BrokerActivity) record).getPrincipal();
-	}
-	@Override
 	public String toString() {
-		return String.format( "TradeDate: %s, Symbol: %s, Type: %s, Side: %s, Price:%f, Qty: %d, Principal Amount: %f, Description: %s",
-				getTradeDate(), getSymbol(), getType(), getSide(), getPrice(), getQuantity(), getPrincipal(), getDescription() );
+		return String.format( "TradeDate: %s, Symbol: %s, Type: %s, Side: %s, Qty: %d, Price: %f, Description: %s",
+				getTradeDate(), getSymbol(), getType(), getSide(), getQuantity(), getPrice(), getDescription() );
 	}
 	
-	public static int size() { return 8; }
+	public static int size() { return 7; }
 	/***********************************************************************
 	 * Getter and Setter
 	 ***********************************************************************/
-	public double getPrincipal() { return _principal; }
 }

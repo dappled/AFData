@@ -1,4 +1,4 @@
-package dataValidation;
+package com.dong.dataValidator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +19,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import dataWrapper.RecordAbstract;
+import com.dong.dataWrapper.RecordAbstract;
 
 /**
  * @author Zhenghong Dong
