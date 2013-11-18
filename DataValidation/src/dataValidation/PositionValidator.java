@@ -10,7 +10,6 @@ import dataWrapper.RecordAbstract;
 /**
  * @author Zhenghong Dong
  */
-@SuppressWarnings("rawtypes")
 public class PositionValidator extends ValidatorBase {
 	public PositionValidator(final String dbServer, final String catalog) {
 		super(dbServer, catalog);
@@ -40,7 +39,8 @@ public class PositionValidator extends ValidatorBase {
 	}
 
 	@Override
-	protected List<List<RecordAbstract>> readLocalFile(final String localFile, final String tradeDate) {}
+	protected List<List<RecordAbstract>> readLocalFile(final String localFile, final String tradeDate) {
+		return null;}
 
 	@Override
 	protected List<List<RecordAbstract>> readBrokerFile(final String brokerFile, final String tradeDate) {

@@ -46,7 +46,6 @@ public abstract class ValidatorBase {
 	 * @param tradeDate the date we want to compare
 	 * @throws Exception
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void validate(final String localFile, final String brokerFile, final String outFile, final String tradeDate)
 			throws Exception {
 		final List<List<RecordAbstract>> brokerTmp = readBrokerFile( brokerFile, tradeDate );
@@ -99,7 +98,6 @@ public abstract class ValidatorBase {
 	 * @param brokerList
 	 * @throws Exception 
 	 */
-	@SuppressWarnings("rawtypes")
 	protected void exportXls(String outFile, List<RecordAbstract> localDiffList, List<RecordAbstract> brokerDiffList,
 			List<RecordAbstract> localOtherDay, List<RecordAbstract> brokerOtherDay, List<RecordAbstract> localExtra,
 			List<RecordAbstract> brokerExtra, List<RecordAbstract> localList, List<RecordAbstract> brokerList) throws Exception {}
@@ -111,7 +109,6 @@ public abstract class ValidatorBase {
 	 * @return
 	 * @throws Exception
 	 */
-	@SuppressWarnings("rawtypes")
 	protected abstract List<List<RecordAbstract>> readLocalFile(String localFile, String tradeDate) throws Exception;
 
 	/**
@@ -121,7 +118,6 @@ public abstract class ValidatorBase {
 	 * @return
 	 * @throws Exception 
 	 */
-	@SuppressWarnings("rawtypes")
 	protected abstract List<List<RecordAbstract>> readBrokerFile(String brokerFile, String tradeDate) throws Exception;
 
 	/**

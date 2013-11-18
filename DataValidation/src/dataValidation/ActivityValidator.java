@@ -24,7 +24,6 @@ import dataWrapper.BrokerActivity;
 import dataWrapper.LocalActivity;
 import dataWrapper.RecordAbstract;
 
-@SuppressWarnings("rawtypes")
 public class ActivityValidator extends ValidatorBase {
 	public ActivityValidator() {}
 
