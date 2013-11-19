@@ -17,8 +17,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import com.dong.dataWrapper.BrokerActivity;
-import com.dong.dataWrapper.LocalActivity;
 import com.dong.dataWrapper.Position;
 import com.dong.dataWrapper.RecordAbstract;
 import com.dong.utils.poi.PoiRecord;
@@ -54,25 +52,32 @@ public class PositionValidator extends ValidatorBase {
 	@Override
 	protected List<List<RecordAbstract>> readBrokerFile(final String brokerFile, final String tradeDate) {
 		final List<RecordAbstract> gsecPostion = new ArrayList<>();
-		final String query = "select [BaseProduct],[TradingSymbol],[Strike],[PutCall],[TDQuantity],[PendingPosition],[ImportedDate]"
-				+ " from " + brokerFile + " where [ImportedDate]=cast('" + tradeDate + "' AS DATE)";
+		final String query = "select  Account, TradingSymbol, BaseProduct, Strike, PutCall, TDQuantity, Maturity,Underlying"
+				+ " from " + brokerFile + " where [ImportedDate]=cast('" + tradeDate + "' AS DATE) order by TradingSymbol";
 
 		try (Statement stmt = _conn.createStatement()) {
 
 			final ResultSet rs = stmt.executeQuery( query );
 			while (rs.next()) {
-				gsecPostion.add( new Position( rs.getString( 2 ), // symbol
-						rs.getString( 1 ), // type
-						rs.getDouble( 3 ), // strike: 0 for equity
-						rs.getString( 4 ), // side: P/C for option, NULL for equity
-						rs.getInt( 5 ), // quantity
-						rs.getString( 6 ) ) );// pending position
+				if (rs.getString( 2 ).equals( "" )) continue; // ignore record with symbol ""
+				if (rs.getInt( 6 ) == 0 ) continue; // ignore record with quantity 0, Goldman keep records even expired, which will have a quantity = 0
+				gsecPostion.add( new Position(
+						rs.getString( 1 ), // account
+						rs.getString( 2 ), // symbol
+						rs.getString( 3 ).toLowerCase(), // type
+						rs.getDouble( 4 ), // strike: 0 for equity
+						rs.getString( 5 ), // side: P/C for option, NULL for equity
+						rs.getInt( 6 ), // quantity
+						rs.getDate( 7 ), // maturity
+						rs.getString( 8 )));//underlying
 			}
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
 		final List<List<RecordAbstract>> ret = new ArrayList<>();
 		ret.add( gsecPostion );
+		ret.add( new ArrayList<RecordAbstract>() );
+		ret.add( new ArrayList<RecordAbstract>() );
 		return ret;
 	}
 
@@ -82,25 +87,31 @@ public class PositionValidator extends ValidatorBase {
 	@Override
 	protected List<List<RecordAbstract>> readLocalFile(final String localFile, final String tradeDate) {
 		final List<RecordAbstract> tradeBlotterPosition = new ArrayList<>();
-		final String query = "select [BaseProduct],[TradingSymbol],[Strike],[PutCall],[TDQuantity],[PendingPosition],[ImportedDate]"
-				+ " from " + localFile + " where [ImportedDate]=cast('" + tradeDate + "' AS DATE)";
+		final String query = "select Account, Symbol,Strike,CallPut,Quantity,ExpirationDate, UnderlyingSymbol"
+				+ " from " + localFile + " order by Symbol";
 
 		try (Statement stmt = _conn.createStatement()) {
 
 			final ResultSet rs = stmt.executeQuery( query );
 			while (rs.next()) {
-				tradeBlotterPosition.add( new Position( rs.getString( 2 ), // symbol
-						rs.getString( 1 ), // type
+				if (rs.getString( 2 ).equals( "" )) continue; // ignore stock with symbol ""
+				tradeBlotterPosition.add( new Position(
+						rs.getString( 1 ), // account
+						rs.getString( 2 ), // symbol
+						rs.getDouble( 3 )==0?"equity":"option", // type
 						rs.getDouble( 3 ), // strike: 0 for equity
-						rs.getString( 4 ), // side: P/C for option, null for equity
+						rs.getString( 4 ), // side: P/C for option, NULL for equity
 						rs.getInt( 5 ), // quantity
-						rs.getString( 6 ) ) );// pending position
+						rs.getDate( 6 ), // maturity
+						rs.getString( 7 ))); // underlyingSymbol
 			}
 		} catch (final SQLException e) {
 			e.printStackTrace();
 		}
 		final List<List<RecordAbstract>> ret = new ArrayList<>();
 		ret.add( tradeBlotterPosition );
+		ret.add( new ArrayList<RecordAbstract>() );
+		ret.add( new ArrayList<RecordAbstract>() );
 		return ret;
 	}
 	
@@ -124,8 +135,8 @@ public class PositionValidator extends ValidatorBase {
 
 			// sizeList
 			final List<Integer> sizeList = new ArrayList<>();
-			sizeList.add( LocalActivity.size() );
-			sizeList.add( BrokerActivity.size() );
+			sizeList.add( Position.size() );
+			sizeList.add( Position.size() );
 
 			// add difference
 			List<List<? extends PoiRecord>> tmp = new ArrayList<>();
@@ -160,19 +171,21 @@ public class PositionValidator extends ValidatorBase {
 		row.createCell( 9 ).setCellValue( createHelper.createRichTextString( "In GSEC but not TradeBlotter" ) );
 
 		row = sheet.createRow( (short) 1 );
+		row.createCell( 0 ).setCellValue( createHelper.createRichTextString( "Account" ) );
 		row.createCell( 1 ).setCellValue( createHelper.createRichTextString( "Symbol" ) );
 		row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Type" ) );
-		row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Strike" ) );
-		row.createCell( 3 ).setCellValue( createHelper.createRichTextString( "Side" ) );
-		row.createCell( 13 ).setCellValue( createHelper.createRichTextString( "Qty" ) );
-		row.createCell( 6 ).setCellValue( createHelper.createRichTextString( "PendingPostion" ) );
+		row.createCell( 3 ).setCellValue( createHelper.createRichTextString( "Strike" ) );
+		row.createCell( 4 ).setCellValue( createHelper.createRichTextString( "PutCall" ) );
+		row.createCell( 5 ).setCellValue( createHelper.createRichTextString( "Qty" ) );
+		row.createCell( 6 ).setCellValue( createHelper.createRichTextString( "Maturity" ) );
 
-		row.createCell( 1 ).setCellValue( createHelper.createRichTextString( "Symbol" ) );
-		row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Type" ) );
-		row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Strike" ) );
-		row.createCell( 3 ).setCellValue( createHelper.createRichTextString( "Side" ) );
-		row.createCell( 13 ).setCellValue( createHelper.createRichTextString( "Qty" ) );
-		row.createCell( 6 ).setCellValue( createHelper.createRichTextString( "PendingPostion" ) );
+		row.createCell( 9 ).setCellValue( createHelper.createRichTextString( "Account" ) );
+		row.createCell( 10 ).setCellValue( createHelper.createRichTextString( "Symbol" ) );
+		row.createCell( 11 ).setCellValue( createHelper.createRichTextString( "Type" ) );
+		row.createCell( 12 ).setCellValue( createHelper.createRichTextString( "Strike" ) );
+		row.createCell( 13 ).setCellValue( createHelper.createRichTextString( "PutCall" ) );
+		row.createCell( 14 ).setCellValue( createHelper.createRichTextString( "Qty" ) );
+		row.createCell( 15 ).setCellValue( createHelper.createRichTextString( "Maturity" ) );
 	}
 
 }

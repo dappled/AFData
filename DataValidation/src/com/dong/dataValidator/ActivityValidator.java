@@ -89,7 +89,7 @@ public class ActivityValidator extends ValidatorBase {
 	/** parse a string list into an activity */
 	private BrokerActivity brokerGetActivity(final String[] list) throws Exception {
 		// tradeDate
-		final String tradeDate = ParseDate.MMSlashDDSlashYYYY( ParseDate.MMDDYYYY( list[ 72 ].trim() ) );
+		final String tradeDate = ParseDate.standardFromStringMonth( list[ 72 ].trim() ) ;
 		// symbol
 		String symbol;
 		if (list[ 14 ].trim().toLowerCase().equals( "equity" )) {
@@ -130,7 +130,7 @@ public class ActivityValidator extends ValidatorBase {
 			final String[] lastPart = { st.nextToken(), st.nextToken() };
 			final DecimalFormat format = new DecimalFormat( "0.#" );
 
-			return String.format( "%s %s %s %s", namePart, ParseDate.MMSlashDDSlashYYYYFromStringMonth( datePart ),
+			return String.format( "%s %s %s %s", namePart, ParseDate.standardFromStringMonth( datePart ),
 					lastPart[ 1 ], format.format( Double.parseDouble( lastPart[ 0 ] ) ) );
 		} catch (final Exception e) {
 			System.err.println( "TrdeValidator: Failed to parse option name " + data );

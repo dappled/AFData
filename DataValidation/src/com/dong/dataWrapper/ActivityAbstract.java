@@ -5,6 +5,7 @@ import com.dong.utils.DoubleComparator;
 public abstract class ActivityAbstract extends RecordAbstract {
 	private final String	_tradeDate;	// date is in MM/dd/yyyy format
 	private double			_price;
+	private String			_description;	
 
 	/***********************************************************************
 	 * Constructor
@@ -12,9 +13,10 @@ public abstract class ActivityAbstract extends RecordAbstract {
 	public ActivityAbstract(final String tradeDate, final String symbol, final String type, final String side,
 			final int qty, final double price,
 			final String description) {
-		super( symbol, type, side, qty, description );
+		super( symbol, type, side, qty);
 		_tradeDate = tradeDate;
 		_price = price;
+		_description = description;
 	}
 
 	/***********************************************************************
@@ -67,5 +69,13 @@ public abstract class ActivityAbstract extends RecordAbstract {
 
 	public void setPrice(final double amt) {
 		_price = amt;
+	}
+	
+	public String getDescription() {
+		return _description;
+	}
+
+	public void setDescription(final String description) {
+		_description = description;
 	}
 }

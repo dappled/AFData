@@ -6,22 +6,21 @@ import com.dong.utils.poi.PoiRecord;
  * @author Zhenghong Dong
  */
 public abstract class RecordAbstract implements Comparable<RecordAbstract>, PoiRecord {
-	private final String	_symbol;		// symbol
-	private final String	_type;			// base product: equity or option
-	private final String	_side;			// different for different implementation: for Activity: B/S; for Position:C/P/null(equity)
-	private int				_qty;			// quantity
-	private String			_description;	// different for different implementation: for Position: pending position
+	private final String	_symbol;	// symbol
+	private final String	_type;		// base product: equity or option or futfop(1355 line in MoreImports.vb,
+										// GSECPosition) or bond
+	private final String	_side;		// different for different implementation: for Activity: B/S; for
+										// Position:C/P/null(equity)
+	private int				_qty;		// quantity
 
 	/***********************************************************************
 	 * Constructor
 	 ***********************************************************************/
-	public RecordAbstract(final String symbol, final String type, final String side, final int qty,
-			final String description) {
+	public RecordAbstract(final String symbol, final String type, final String side, final int qty) {
 		_symbol = symbol;
 		_type = type;
 		_side = side;
 		_qty = qty;
-		_description = description;
 	}
 
 	/***********************************************************************
@@ -29,7 +28,9 @@ public abstract class RecordAbstract implements Comparable<RecordAbstract>, PoiR
 	 ***********************************************************************/
 	@Override
 	public int compareTo(final RecordAbstract o2) {
-		return getSymbol().compareTo( o2.getSymbol() );
+		int ret = getSymbol().compareTo( o2.getSymbol() );
+		if (ret == 0) { return getType().compareTo( o2.getType() ); }
+		return ret;
 	}
 
 	/***********************************************************************
@@ -43,7 +44,7 @@ public abstract class RecordAbstract implements Comparable<RecordAbstract>, PoiR
 		return (_symbol.equals( ((ActivityAbstract) record).getSymbol() ) && // compare symbol
 
 				_type.equals( ((ActivityAbstract) record).getSide() ) && // compare side
-				_qty == ((ActivityAbstract) record).getQuantity()); // compare quantity
+		_qty == ((ActivityAbstract) record).getQuantity()); // compare quantity
 
 	}
 
@@ -70,14 +71,6 @@ public abstract class RecordAbstract implements Comparable<RecordAbstract>, PoiR
 
 	public void setQuantity(final int qty) {
 		_qty = qty;
-	}
-
-	public String getDescription() {
-		return _description;
-	}
-
-	public void setDescription(final String description) {
-		_description = description;
 	}
 
 	public String getType() {
