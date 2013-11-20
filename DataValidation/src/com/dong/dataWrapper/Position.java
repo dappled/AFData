@@ -88,13 +88,13 @@ public class Position extends RecordAbstract {
 		final CreationHelper createHelper = wb.getCreationHelper();
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getAccount() ) );
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getSymbol() ) );
-		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getType() ) );
+		row.createCell( i++ ).setCellValue(
+				createHelper.createRichTextString( ParseDate.standardFromSQLDate( getMaturity() ) ) );
 		if (_strike == 0) row.createCell( i++ ).setCellValue( createHelper.createRichTextString( "" ) );
 		else row.createCell( i++ ).setCellValue( _strike );
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getSide() ) );
 		row.createCell( i++ ).setCellValue( getQuantity() );
-		row.createCell( i++ ).setCellValue(
-				createHelper.createRichTextString( ParseDate.standardFromSQLDate( getMaturity() ) ) );
+		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getType() ) );
 	}
 
 	public static int size() {

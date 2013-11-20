@@ -3,12 +3,12 @@ package com.dong.dataValidator;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -26,21 +26,12 @@ import com.dong.utils.poi.WriteXls;
  * @author Zhenghong Dong
  */
 public class PositionValidator extends ValidatorBase {
-	private Connection	_conn	= null;
 
 	/***********************************************************************
 	 * Constructor
 	 ***********************************************************************/
 	public PositionValidator(final String dbServer, final String catalog) throws SQLException {
 		super( dbServer, catalog );
-		// String name="cmscim";
-
-		final String url = "jdbc:sqlserver://" + dbServer + ";integratedSecurity=true;";
-		try {
-			_conn = DriverManager.getConnection( url );
-		} catch (final SQLException e) {
-			e.printStackTrace();
-		}
 	}
 
 	/***********************************************************************
@@ -51,6 +42,11 @@ public class PositionValidator extends ValidatorBase {
 	 ***********************************************************************/
 	@Override
 	protected List<List<RecordAbstract>> readBrokerFile(final String brokerFile, final String tradeDate) {
+		// wipe last 7 day's data if position
+		Calendar cal = Calendar.getInstance();
+		cal.setTime( new Date() );
+		wipeData( brokerFile, 7 );
+
 		final List<RecordAbstract> gsecPostion = new ArrayList<>();
 		final String query = "select  Account, TradingSymbol, BaseProduct, Strike, PutCall, TDQuantity, Maturity,Underlying"
 				+ " from " + brokerFile + " where [ImportedDate]=cast('" + tradeDate + "' AS DATE) order by TradingSymbol";
@@ -173,19 +169,19 @@ public class PositionValidator extends ValidatorBase {
 		row = sheet.createRow( (short) 1 );
 		row.createCell( 0 ).setCellValue( createHelper.createRichTextString( "Account" ) );
 		row.createCell( 1 ).setCellValue( createHelper.createRichTextString( "Symbol" ) );
-		row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Type" ) );
+		row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Maturity" ) );
 		row.createCell( 3 ).setCellValue( createHelper.createRichTextString( "Strike" ) );
 		row.createCell( 4 ).setCellValue( createHelper.createRichTextString( "PutCall" ) );
 		row.createCell( 5 ).setCellValue( createHelper.createRichTextString( "Qty" ) );
-		row.createCell( 6 ).setCellValue( createHelper.createRichTextString( "Maturity" ) );
+		row.createCell( 6 ).setCellValue( createHelper.createRichTextString( "Type" ) );
 
 		row.createCell( 9 ).setCellValue( createHelper.createRichTextString( "Account" ) );
 		row.createCell( 10 ).setCellValue( createHelper.createRichTextString( "Symbol" ) );
-		row.createCell( 11 ).setCellValue( createHelper.createRichTextString( "Type" ) );
+		row.createCell( 11 ).setCellValue( createHelper.createRichTextString( "Maturity" ) );
 		row.createCell( 12 ).setCellValue( createHelper.createRichTextString( "Strike" ) );
 		row.createCell( 13 ).setCellValue( createHelper.createRichTextString( "PutCall" ) );
 		row.createCell( 14 ).setCellValue( createHelper.createRichTextString( "Qty" ) );
-		row.createCell( 15 ).setCellValue( createHelper.createRichTextString( "Maturity" ) );
+		row.createCell( 15 ).setCellValue( createHelper.createRichTextString( "Type" ) );
 	}
 
 }

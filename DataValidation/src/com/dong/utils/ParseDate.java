@@ -47,6 +47,7 @@ public class ParseDate {
 		try {
 			return ParseDate.standardFromMMddyyyy( date.substring( 4, 8 ) + date.substring( 0, 4 ) );
 		} catch (final Exception e) {
+			e.printStackTrace();
 			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
 			return "";
 		}
@@ -61,8 +62,10 @@ public class ParseDate {
 	public static String standardFromStringMonth(final String date) {
 		try {
 			final String[] list = date.split( " " );
-			return ParseDate.fillDigitalString( ParseDate.getMonth( list[ 0 ] ) ) + "/" + list[ 1 ].trim() + "/" + list[ 2 ].trim();
+			return ParseDate.fillDigitalString( ParseDate.getMonth( list[ 0 ] ) ) + "/" + list[ 1 ].trim() + "/"
+					+ list[ 2 ].trim();
 		} catch (final Exception e) {
+			e.printStackTrace();
 			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
 			return "";
 		}
@@ -78,6 +81,7 @@ public class ParseDate {
 		try {
 			return ParseDate.standardFromyyyyMMdd( date.replace( "-", "" ) );
 		} catch (final Exception e) {
+			e.printStackTrace();
 			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
 			return "";
 		}
@@ -93,11 +97,12 @@ public class ParseDate {
 		try {
 			return date.substring( 0, 2 ) + "/" + date.substring( 2, 4 ) + "/" + date.substring( 4, 8 );
 		} catch (final Exception e) {
+			e.printStackTrace();
 			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
 			return "";
 		}
 	}
-	
+
 	/**
 	 * Convert sql.Date date to MM/dd/yyyy
 	 * @param date
@@ -109,7 +114,7 @@ public class ParseDate {
 	}
 
 	/**
-	 * Convert standard date format MM/dd/yyyy to MMddyyyy, which will be used to find trde file name
+	 * Convert standard date format MM/dd/yyyy to MMddyyyy, which will be used to find tradesummary file
 	 * @param date
 	 * @return
 	 * @throws Exception
@@ -118,6 +123,24 @@ public class ParseDate {
 		try {
 			return date.replace( "/", "" );
 		} catch (final Exception e) {
+			e.printStackTrace();
+			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
+			return "";
+		}
+	}
+
+	/**
+	 * Convert standard date format MM/dd/yyyy to yyyyMMdd, which will be used to find trde file and mail subject
+	 * @param date
+	 * @return
+	 * @throws Exception
+	 */
+	public static String yyyyMMddFromStandard(String date) {
+		try {
+			date = date.replace( "/", "" );
+			return date.substring( 4, 8 ) + date.substring( 0, 4 );
+		} catch (final Exception e) {
+			e.printStackTrace();
 			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
 			return "";
 		}
@@ -144,14 +167,27 @@ public class ParseDate {
 	}
 
 	/**
+	 * Given a Java calendar, convert it to String format MM/dd/yyyy
+	 * @param date
+	 * @return
+	 */
+	public static String standardFromDate(final Date date) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime( date );
+		
+		return String.format( "%d/%d/%d", cal.get( Calendar.MONTH ) + 1, cal.get( Calendar.DATE ),
+				cal.get( Calendar.YEAR ) );
+	}
+	
+	/**
 	 * Get previous working day in format MM/dd/yyyy
 	 * @param date
 	 * @return
 	 */
 	public static String getPreviousWorkingDay(final Date date) {
-		final Calendar cal = Calendar.getInstance();
-		cal.setTime( date );
-
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		
 		int dayOfWeek;
 		do {
 			cal.add( Calendar.DAY_OF_MONTH, -1 );

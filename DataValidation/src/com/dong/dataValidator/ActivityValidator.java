@@ -89,7 +89,7 @@ public class ActivityValidator extends ValidatorBase {
 	/** parse a string list into an activity */
 	private BrokerActivity brokerGetActivity(final String[] list) throws Exception {
 		// tradeDate
-		final String tradeDate = ParseDate.standardFromStringMonth( list[ 72 ].trim() ) ;
+		final String tradeDate = ParseDate.standardFromyyyyMMdd( list[ 72 ].trim() ) ;
 		// symbol
 		String symbol;
 		if (list[ 14 ].trim().toLowerCase().equals( "equity" )) {

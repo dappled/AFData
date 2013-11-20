@@ -1,7 +1,13 @@
 package com.dong.dataValidator;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -20,28 +26,43 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.dong.dataWrapper.RecordAbstract;
+import com.dong.utils.ParseDate;
 
 /**
  * @author Zhenghong Dong
  */
 public abstract class ValidatorBase {
-	protected final String _dbServer;
-	protected final String _catalog;
-	
+	protected Connection	_conn;
+
+	/***********************************************************************
+	 * Constructor
+	 ***********************************************************************/
 	public ValidatorBase() {
-		_dbServer = null;
-		_catalog = null;
+		_conn = null;
 	}
-	
+
 	public ValidatorBase(String dbServer, String catalog) {
-		_dbServer = dbServer;
-		_catalog = catalog;
+		final String url = "jdbc:sqlserver://" + dbServer + ";integratedSecurity=true;";
+		try {
+			_conn = DriverManager.getConnection( url );
+		} catch (final SQLException e) {
+			System.err.println( "ValidatorBase: Fail to connect to " + dbServer );
+			e.printStackTrace();
+			System.exit( 1 );
+		}
 	}
-	
+
+	public void close() throws SQLException {
+		if (_conn != null) _conn.close();
+	}
+
+	/***********************************************************************
+	 * Utilities
+	 ***********************************************************************/
 	/**
 	 * Compare local data and broker data and find possible mismatches
-	 * @param localFileName file name or database name 
-	 * @param brokerFileName file name or database name 
+	 * @param localFileName file name or database name
+	 * @param brokerFileName file name or database name
 	 * @param outFileName file name of mismatch report
 	 * @param tradeDate the date we want to compare
 	 * @throws Exception
@@ -96,11 +117,12 @@ public abstract class ValidatorBase {
 	 * @param brokerExtra
 	 * @param localList
 	 * @param brokerList
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	protected void exportXls(String outFile, List<RecordAbstract> localDiffList, List<RecordAbstract> brokerDiffList,
 			List<RecordAbstract> localOtherDay, List<RecordAbstract> brokerOtherDay, List<RecordAbstract> localExtra,
-			List<RecordAbstract> brokerExtra, List<RecordAbstract> localList, List<RecordAbstract> brokerList) throws Exception {}
+			List<RecordAbstract> brokerExtra, List<RecordAbstract> localList, List<RecordAbstract> brokerList)
+			throws Exception {}
 
 	/**
 	 * Read from local, store info into a list of list
@@ -116,7 +138,7 @@ public abstract class ValidatorBase {
 	 * @param brokerFile
 	 * @param tradeDate
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	protected abstract List<List<RecordAbstract>> readBrokerFile(String brokerFile, String tradeDate) throws Exception;
 
@@ -125,7 +147,8 @@ public abstract class ValidatorBase {
 	 * @param outFileName
 	 * @param addressList
 	 */
-	public void sendEMail(final String outFileName, final String mailSubject, final String addressList) {
+	public void sendEMail(final String outFileName, final String mailSubject, final String addressList,
+			final String date) {
 		final String username = "rn@albertfried.com";
 		final String password = "cljt123#";
 
@@ -137,20 +160,18 @@ public abstract class ValidatorBase {
 
 		final Session session = Session.getInstance( props,
 				new javax.mail.Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication( username, password );
-			}
-		} );
+					@Override
+					protected PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication( username, password );
+					}
+				} );
 
 		try {
-			final String fileName = mailSubject;
 			final Message message = new MimeMessage( session );
 			message.setFrom( new InternetAddress( "rn@albertfried.com" ) );
 			message.setRecipients( Message.RecipientType.TO,
-					InternetAddress.parse( addressList) );
-			message.setSubject( fileName );
-			// message.setText("PFA");
+					InternetAddress.parse( addressList ) );
+			message.setSubject( mailSubject + " for " + date );
 
 			MimeBodyPart messageBodyPart = new MimeBodyPart();
 
@@ -160,17 +181,34 @@ public abstract class ValidatorBase {
 			final String file = outFileName;
 			final DataSource source = new FileDataSource( file );
 			messageBodyPart.setDataHandler( new DataHandler( source ) );
-			messageBodyPart.setFileName( fileName + ".xls" );
+			messageBodyPart.setFileName( mailSubject + date + ".xls" );
 			multipart.addBodyPart( messageBodyPart );
 
 			message.setContent( multipart );
 
 			Transport.send( message );
 
-
 		} catch (final MessagingException e) {
-			System.err.println("TrdeValidator: sendEmail: fail to send " + mailSubject);
+			System.err.println( "TrdeValidator: sendEmail: fail to send " + mailSubject );
 			e.printStackTrace();
+		}
+	}
+
+	public void wipeData(final String dbName, final int dates) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime( new Date() );
+		cal.add( Calendar.DAY_OF_MONTH, -7 );
+		final String query = "delete"
+				+ " from " + dbName + " where [ImportedDate]<cast('" + ParseDate.standardFromDate( cal.getTime() )
+				+ "' AS DATE)";
+
+		try (Statement stmt = _conn.createStatement()) {
+
+			int re = stmt.executeUpdate( query );
+			System.out.println(re);
+		} catch (SQLException e) {
+			System.err.println( "Fail to wipe data from " + dbName + " for dates before "
+					+ ParseDate.standardFromDate( cal.getTime() ) );
 		}
 	}
 }
