@@ -14,7 +14,9 @@ import org.joda.time.format.DateTimeFormatter;
  * @author Zhenghong Dong
  */
 public class ParseDate {
-
+	public static String		today = standardFromDate( new Date() );
+	public static String		yesterday = getPreviousWorkingDay( new Date() );
+	
 	/**
 	 * Given string like yyyyMMdd, return localDate format
 	 * @param date the string date
@@ -124,13 +126,13 @@ public class ParseDate {
 			return date.replace( "/", "" );
 		} catch (final Exception e) {
 			e.printStackTrace();
-			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
+			System.err.printf( "Failed to parse date to MMddyyyy from %s, will return empty string\n", date );
 			return "";
 		}
 	}
 
 	/**
-	 * Convert standard date format MM/dd/yyyy to yyyyMMdd, which will be used to find trde file and mail subject
+	 * Convert standard date format MM/dd/yyyy to yyyyMMdd, which will be used to find trde file
 	 * @param date
 	 * @return
 	 * @throws Exception
@@ -141,7 +143,23 @@ public class ParseDate {
 			return date.substring( 4, 8 ) + date.substring( 0, 4 );
 		} catch (final Exception e) {
 			e.printStackTrace();
-			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
+			System.err.printf( "Failed to parse date to yyyyMMdd from %s, will return empty string\n", date );
+			return "";
+		}
+	}
+
+	/**
+	 * Once again I try to bypass email system to send mismatch report... The email system doesn't
+	 * let me send email with subject containing certain date format like MM/dd/yyyy MMddyyyy for certain days(like 11/15, 11/19...)
+	 * @param date
+	 * @return
+	 */
+	public static String MMddFromStandard(final String date) {
+		try {
+			return date.replace( "/", "" ).substring( 0, 4 );
+		} catch (final Exception e) {
+			e.printStackTrace();
+			System.err.printf( "Failed to parse date to MMdd from %s, will return empty string\n", date );
 			return "";
 		}
 	}
@@ -174,11 +192,11 @@ public class ParseDate {
 	public static String standardFromDate(final Date date) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime( date );
-		
+
 		return String.format( "%d/%d/%d", cal.get( Calendar.MONTH ) + 1, cal.get( Calendar.DATE ),
 				cal.get( Calendar.YEAR ) );
 	}
-	
+
 	/**
 	 * Get previous working day in format MM/dd/yyyy
 	 * @param date
@@ -186,8 +204,8 @@ public class ParseDate {
 	 */
 	public static String getPreviousWorkingDay(final Date date) {
 		Calendar cal = Calendar.getInstance();
-		cal.setTime(date);
-		
+		cal.setTime( date );
+
 		int dayOfWeek;
 		do {
 			cal.add( Calendar.DAY_OF_MONTH, -1 );

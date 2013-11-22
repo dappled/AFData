@@ -48,6 +48,10 @@ public abstract class GeneralImporterExporter {
 	}
 	
 	
+	/**
+	 * Wipe every data who is older than 7 days
+	 * @param dbName
+	 */
 	public void wipeData(final String dbName) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime( new Date() );
