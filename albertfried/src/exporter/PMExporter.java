@@ -1,0 +1,206 @@
+package exporter;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+
+import utils.ParseDate;
+import utils.poi.WriteXls;
+import dataWrapper.PMAbstract;
+import dataWrapper.exporter.portfolioMargin.PMDailyAnalysis;
+import dataWrapper.exporter.portfolioMargin.PMDailyDetail;
+import dataWrapper.exporter.portfolioMargin.PMDailyDifference;
+import dataWrapper.exporter.portfolioMargin.PMDailyRecord;
+
+/**
+ * @author Zhenghong Dong
+ */
+public class PMExporter extends ExporterBase {
+
+	public PMExporter(String dbServer, String catalog) {
+		super( dbServer, catalog );
+	}
+
+	@Override
+	public void report(String outFile, final String today) throws Exception {
+		// generate difference list
+		List<PMAbstract> diffList = getDifference( today );
+
+		// generate rank list
+		List<PMAbstract> rankList = getRank( today );
+
+		// generate detail analysis
+		List<PMAbstract> detailList = getDetail( today );
+
+		exportXls( outFile, diffList, rankList, detailList );
+	}
+
+	/** generate daily difference list for given day */
+	private List<PMAbstract> getDifference(final String today) {
+		List<PMAbstract> diffList = new ArrayList<>();
+		final String query = "SELECT * from " +
+				"(SELECT today.[Symbol], today.[Requirement],today.[Requirement] - yesterday.[Requirement] as RequirementChange " +
+				"FROM (select symbol, symboltype,  requirement from [Clearing].[dbo].[PMRequirement] " +
+				"where ImportDate = cast('" + today + "' as Date)) as today " +
+				"left join (select symbol, symboltype,  requirement from [Clearing].[dbo].[PMRequirement] " +
+				"where ImportDate = cast('" + ParseDate.getPreviousWorkingDay( today ) + "' as Date)) as yesterday " +
+				"on yesterday.Symbol = today.Symbol and yesterday.SymbolType = today.SymbolType) as re " +
+				"where re.RequirementChange <> 0 " +
+				"order by re.Symbol ";
+
+		try (Statement stmt = _conn.createStatement()) {
+
+			ResultSet rs = stmt.executeQuery( query );
+			while (rs.next()) {
+				diffList.add( new PMDailyDifference( today, // importDate
+						rs.getString( 1 ), // symbol
+						rs.getFloat( 2 ), // requirement
+						rs.getFloat( 3 ) ) ); // requirementChange
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return diffList;
+	}
+
+	/** generate daily rank list according to requirement for given day */
+	private List<PMAbstract> getRank(final String today) {
+		List<PMAbstract> rankList = new ArrayList<>();
+		final String query = "select symbol, requirement as Requirement, risk, minimum " +
+				"from Clearing.dbo.PMRequirement " +
+				"where ImportDate = CAST('" + today + "' as DATE) " +
+				"order by Requirement desc";
+
+		try (Statement stmt = _conn.createStatement()) {
+
+			ResultSet rs = stmt.executeQuery( query );
+			while (rs.next()) {
+				rankList.add( new PMDailyRecord( today, // importDate
+						rs.getString( 1 ), // symbol
+						rs.getFloat( 2 ), // requirement
+						rs.getFloat( 3 ), // risk
+						rs.getFloat( 4 ) ) ); // minimum
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return rankList;
+	}
+
+	/**
+	 * generate daily detailed record report according to PMDetail and PMRequirement
+	 * @throws Exception
+	 */
+	private List<PMAbstract> getDetail(String today) throws Exception {
+		Map<String, PMDailyAnalysis> analysis = new LinkedHashMap<>();
+		// generate
+		// get all PM's detail report with whose symbol's requirement = risk on today
+		final String query = "SELECT t1.Symbol,[Maturity],[putCall],[Strike],[Quantity],[Price] " +
+				",Down5, Down4, Down3, Down2, Down1 " +
+				",up1, up2, up3, Up4, Up5, requirement as Requirement " +
+				"FROM " +
+				"(select * from [Clearing].[dbo].[PMDetail] " +
+				"where ImportDate = CAST('" + today + "' as DATE)) as t1 " +
+				"join " +
+				"(select Symbol, Requirement " +
+				"from Clearing.dbo.PMRequirement " +
+				"where ImportDate = CAST('" + today + "' as DATE) " +
+				" and Requirement = Risk) as t2 " +
+				"on t1.Symbol = t2.Symbol " +
+				"order by Requirement desc";
+
+		try (Statement stmt = _conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery( query );
+			PMDailyDetail detail = null;
+			String symbol = null;
+			while (rs.next()) {
+				symbol = rs.getString( 1 ).trim();
+				detail = new PMDailyDetail( today, // importDate
+						symbol, // symbol
+						ParseDate.standardFromSQLDate( rs.getDate( 2 ) ), // maturity
+						rs.getString( 3 ), // putCall
+						rs.getFloat( 4 ), // strike
+						rs.getFloat( 5 ), // quantity
+						rs.getFloat( 6 ), // price
+						rs.getFloat( 7 ), // down5
+						rs.getFloat( 8 ), // down4
+						rs.getFloat( 9 ), // down3
+						rs.getFloat( 10 ), // down2
+						rs.getFloat( 11 ), // down1
+						rs.getFloat( 12 ), // up1
+						rs.getFloat( 13 ), // up2
+						rs.getFloat( 14 ), // up3
+						rs.getFloat( 15 ), // up4
+						rs.getFloat( 16 ) ); // up5
+				// if this symbol is already in the map, add it the to analysis
+				if (!analysis.containsKey( symbol )) {
+					analysis.put( symbol, new PMDailyAnalysis( today, symbol, rs.getFloat( 17 ) ) );
+				}
+				analysis.get( symbol ).add( detail );
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		for (PMDailyAnalysis tmpAnalysis : analysis.values()) {
+			tmpAnalysis.analysis();
+		}
+		return new ArrayList<PMAbstract>( analysis.values() );
+	}
+
+	protected void exportXls(final String outFile, final List<PMAbstract> diffList, final List<PMAbstract> rankList, final List<PMAbstract> detailList)
+			throws Exception {
+		try {
+			final Workbook wb = new HSSFWorkbook();
+			// create sheet for difference
+			Sheet sheet = wb.createSheet( "difference" );
+			// add header for difference
+			final CreationHelper createHelper = wb.getCreationHelper();
+			Row row = sheet.createRow( (short) 0 );
+			row.createCell( 0 ).setCellValue( createHelper.createRichTextString( "Symbol" ) );
+			row.createCell( 1 ).setCellValue( createHelper.createRichTextString( "Requirement" ) );
+			row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Difference" ) );
+			// create sheet for rank
+			sheet = wb.createSheet( "rank" );
+			// add header for rank
+			row = sheet.createRow( (short) 0 );
+			row.createCell( 0 ).setCellValue( createHelper.createRichTextString( "Symbol" ) );
+			row.createCell( 1 ).setCellValue( createHelper.createRichTextString( "Requirement" ) );
+			row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "Risk" ) );
+			row.createCell( 3 ).setCellValue( createHelper.createRichTextString( "Minimum" ) );
+			// create sheet for detail
+			sheet = wb.createSheet( "details" );
+			// save headers
+			final FileOutputStream fileOut = new FileOutputStream( outFile );
+			wb.write( fileOut );
+			fileOut.close();
+
+			// add daily difference
+			WriteXls.appendSingleRecord( outFile, "difference", diffList );
+
+			// add daily rank
+			WriteXls.appendSingleRecord( outFile, "rank", rankList );
+
+			// add detail reports
+			WriteXls.appendSingleRecord( outFile, "details", detailList );
+
+		} catch (final FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

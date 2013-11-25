@@ -19,19 +19,20 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 public class WriteXls {
 	/**
 	 * Write a list of list of records into xls file
-	 * The final format will similar to (different list might have different number of records)
-	 *  1st line:      List A						List B
-	 *  2nd line:      A's 1st record				B's 1st record
-	 *  3rd line:      A's 2nd record 				B's 2nd record
-	 *  nth line:      ...							...
-	 *  A's last line: A's last record				...
-	 *  B's last line:     							B's last record
+	 * The final format will similar to (different list might have different number of records) :
+	 * 1st line: List A List B
+	 * 2nd line: A's 1st record B's 1st record
+	 * 3rd line: A's 2nd record B's 2nd record
+	 * nth line: ... ...
+	 * A's last line: A's last record ...
+	 * B's last line: B's last record
 	 * @param fileName the output file name
 	 * @param workbook the output sheet name
 	 * @param list list of list to write
 	 * @throws Exception
 	 */
-	public static void append(final String fileName, final String workbook, final List<List<? extends PoiRecord>> list, final List<Integer> sizeList)
+	public static void appendMultipleRecords(final String fileName, final String workbook, final List<List<? extends PoiRecord>> list,
+			final List<Integer> sizeList)
 			throws Exception {
 		try {
 			Workbook wb;
@@ -44,7 +45,7 @@ public class WriteXls {
 			if ((sheet = wb.getSheet( workbook )) == null) {
 				sheet = wb.createSheet( workbook );
 			}
-			final int start = (sheet.getLastRowNum() == 0 ? 0 : (sheet.getLastRowNum() + 1));
+			final int start = (sheet.getLastRowNum() + 1);
 			Row row = null;
 			final int maxCol = WriteXls.getTotalColumns( list );
 
@@ -54,7 +55,7 @@ public class WriteXls {
 				for (int p = 0; p < list.size(); p++) {
 					List<? extends PoiRecord> recordList = list.get( p );
 					if (recordList.size() > i - start) {
-						recordList.get( i - start ).writeNext( wb, row, j );
+						recordList.get( i - start ).writeNextForMultipleRecords( wb, row, j );
 					}
 					j += sizeList.get( p ) + 2;
 				}
@@ -88,4 +89,57 @@ public class WriteXls {
 		}
 		return ret;
 	}
+
+	/**
+	 * Write a list records into xls file
+	 * The final format will similar to :
+	 * 1st line: List A
+	 * 2nd line: A's 1st record's 1st row
+	 * 3rd line: A's 1st record's 2nd row
+	 * ... line: ...
+	 * kth line: A's pth record's jth row
+	 * ... line: ...
+	 * lastline: A's last record's last row
+	 * @param fileName the output file name
+	 * @param workbook the output sheet name
+	 * @param list list to write
+	 * @throws Exception
+	 */
+	public static void appendSingleRecord(final String fileName, final String workbook, final List<? extends PoiRecord> list)
+			throws Exception {
+		try {
+			Workbook wb;
+			Sheet sheet;
+			try {
+				wb = WorkbookFactory.create( new File( fileName ) );
+			} catch (FileNotFoundException e) {
+				wb = new HSSFWorkbook();
+			}
+			if ((sheet = wb.getSheet( workbook )) == null) {
+				sheet = wb.createSheet( workbook );
+			}
+			final int start = (sheet.getLastRowNum() + 1);
+
+			int i = start;
+			for (int p = 0; p < list.size(); p++) {
+				i = list.get( p ).writeNextForSingleRecord( wb, sheet, i);
+			}
+
+			// format stuff
+			for (int q = 0; q < 15; q++) {
+				sheet.autoSizeColumn( q );
+			}
+
+			// Write the output to a file
+			final FileOutputStream fileOut = new FileOutputStream( fileName );
+			wb.write( fileOut );
+			fileOut.close();
+
+		} catch (final FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 }

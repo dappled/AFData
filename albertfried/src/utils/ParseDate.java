@@ -14,8 +14,10 @@ import org.joda.time.format.DateTimeFormatter;
  * @author Zhenghong Dong
  */
 public class ParseDate {
-	public static String		today = standardFromDate( new Date() );
-	public static String		yesterday = getPreviousWorkingDay( new Date() );
+	public static String		yesterday = getPreviousWorkingDay( standardFromDate( new Date() ) );
+	// today should be the next day of yesterday.. this is for test only, if we want to run some test on Monday for last friday's report, which should be 
+	// generated last Saturday, today is then last Saturday which is one day after yesterday but not real today.
+	public static String		today = getNextDay( yesterday );
 	
 	/**
 	 * Given string like yyyyMMdd, return localDate format
@@ -196,15 +198,31 @@ public class ParseDate {
 		return String.format( "%d/%d/%d", cal.get( Calendar.MONTH ) + 1, cal.get( Calendar.DATE ),
 				cal.get( Calendar.YEAR ) );
 	}
+	
+	/**
+	 * Return the next day of a certain day in format MM/dd/yyyy
+	 * @param date
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public static String getNextDay(final String date) {
+		Calendar cal =Calendar.getInstance();
+		cal.setTime( new Date(date) );
+		
+		cal.add( Calendar.DAY_OF_MONTH, +1 );
+		return String.format( "%d/%d/%d", cal.get( Calendar.MONTH ) + 1, cal.get( Calendar.DATE ),
+				cal.get( Calendar.YEAR ) );
+	}
 
 	/**
 	 * Get previous working day in format MM/dd/yyyy
 	 * @param date
 	 * @return
 	 */
-	public static String getPreviousWorkingDay(final Date date) {
+	@SuppressWarnings("deprecation")
+	public static String getPreviousWorkingDay(final String date) {
 		Calendar cal = Calendar.getInstance();
-		cal.setTime( date );
+		cal.setTime( new Date(date) );
 
 		int dayOfWeek;
 		do {

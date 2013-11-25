@@ -21,8 +21,8 @@ import utils.ParseDate;
 import utils.poi.PoiRecord;
 import utils.poi.WriteXls;
 import dataWrapper.RecordAbstract;
-import dataWrapper.validator.BrokerActivity;
-import dataWrapper.validator.LocalActivity;
+import dataWrapper.exporter.validator.BrokerActivity;
+import dataWrapper.exporter.validator.LocalActivity;
 
 public class ActivityValidator extends ValidatorBase {
 	public ActivityValidator() {}
@@ -246,29 +246,25 @@ public class ActivityValidator extends ValidatorBase {
 			List<List<? extends PoiRecord>> tmp = new ArrayList<>();
 			tmp.add( summaryDiffList );
 			tmp.add( GSECDiffList );
-			WriteXls.append( outFileName, "difference", tmp, sizeList );
+			WriteXls.appendMultipleRecords( outFileName, "difference", tmp, sizeList );
 
 			// add other day stuff
 			tmp = new ArrayList<>();
 			tmp.add( summaryOtherDay );
 			tmp.add( GSECOtherDay );
-			WriteXls.append( outFileName, "activity of different day", tmp, sizeList );
+			WriteXls.appendMultipleRecords( outFileName, "activity of different day", tmp, sizeList );
 
 			// add OA/OE/AJC etc stuff
 			tmp = new ArrayList<>();
 			tmp.add( summaryExtraList );
 			tmp.add( GSECExtraList );
-			WriteXls.append( outFileName, "OA OE DIV AJC etc records", tmp, sizeList );
+			WriteXls.appendMultipleRecords( outFileName, "OA OE DIV AJC etc records", tmp, sizeList );
 
 			// add reformatted tradesummary stuff
-			tmp = new ArrayList<>();
-			tmp.add( summaryList );
-			WriteXls.append( outFileName, "aggregated tradesummary", tmp, sizeList );
+			WriteXls.appendSingleRecord( outFileName, "aggregated tradesummary", summaryList );
 
 			// add GSEC stuff
-			tmp = new ArrayList<>();
-			tmp.add( GSECList );
-			WriteXls.append( outFileName, "aggregated GSEC", tmp, sizeList );
+			WriteXls.appendSingleRecord( outFileName, "aggregated GSEC", GSECList );
 
 		} catch (final FileNotFoundException e) {
 			e.printStackTrace();

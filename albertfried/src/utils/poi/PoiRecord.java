@@ -1,6 +1,7 @@
 package utils.poi;
 
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 /**
@@ -14,10 +15,18 @@ public interface PoiRecord {
 	 * @param row the row to write into
 	 * @param index start from this index
 	 */
-	public void writeNext(Workbook wb, Row row, int index);
-	
+	public void writeNextForMultipleRecords(Workbook wb, Row row, int index);
+
 	/**
-	 * Returning how many fields are there in this record (so it will occupy this many of columns) 
+	 * Write the record into the workbook at certain row
+	 * @param wb
+	 * @param sheet
+	 * @param rowNum row number to start
+	 * @return return the next row we should append
+	 */
+	public int writeNextForSingleRecord(Workbook wb, Sheet sheet, int rowNum);
+	/**
+	 * Returning how many fields are there in this record (so it will occupy this many of columns)
 	 * @return
 	 */
 	/* public int size(); */

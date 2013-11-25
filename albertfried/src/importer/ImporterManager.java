@@ -38,6 +38,15 @@ public class ImporterManager {
 				case "/dbName":
 					ImporterManager._dbName = args[ ++i ];
 					break;
+				case "/dbserver":
+					_dbServer = args[ ++i ];
+					break;
+				case "/catalog":
+					_catalog = args[ ++i ];
+					break;
+				case "/wipe":
+					_wipe = Boolean.parseBoolean( args[++i] );
+					break;
 				case "/type":
 					// easy to borrow
 					if (args[ ++i ].equals( "etb" )) {
@@ -52,15 +61,6 @@ public class ImporterManager {
 						_importer = new PMDetailImporter( _dbServer, _catalog );
 					}
 					else throw new Exception( "ImporterManager: /type argument unsopported: " + args[i] );
-					break;
-				case "/dbserver":
-					_dbServer = args[ ++i ];
-					break;
-				case "/catalog":
-					_catalog = args[ ++i ];
-					break;
-				case "/wipe":
-					_wipe = Boolean.parseBoolean( args[++i] );
 					break;
 				default:
 					break;

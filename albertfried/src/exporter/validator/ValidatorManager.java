@@ -9,7 +9,8 @@ public class ValidatorManager {
 	private static String			_outFile;
 	private static ValidatorBase	_validator;
 	// used for database search, database imported date will always be at today's date ( since they are imported every
-	// 5:00 AM ), but they are indeed yesterday's data.
+	// 5:00 AM ), but they are indeed yesterday's data. 
+	// Update: "today"'s date should be the day after yesterday
 	private static String			_date;
 	private static String			_mailSubject;
 	private static String			_dbServer;
@@ -59,18 +60,6 @@ public class ValidatorManager {
 								ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
 					}
 					break;
-				case "/type":
-					if (args[ ++i ].equals( "activity" )) {
-						_date = ParseDate.yesterday;
-						ValidatorManager._validator = new ActivityValidator();
-						ValidatorManager._mailSubject = "ActivityMismatch";
-					}
-					else if (args[ i ].equals( "position" )) {
-						_date = ParseDate.today;
-						ValidatorManager._validator = new PositionValidator( _dbServer, _catalog );
-						ValidatorManager._mailSubject = "PostitionMismatch";
-					} else throw new Exception( "ValidatorManager: /type argument inapproporiate" );
-					break;
 				case "/dbserver":
 					_dbServer = args[ ++i ];
 					break;
@@ -79,6 +68,18 @@ public class ValidatorManager {
 					break;
 				case "/wipe":
 					_wipe = Boolean.parseBoolean( args[++i] );
+					break;
+				case "/type":
+					if (args[ ++i ].equals( "activity" )) {
+						_date = ParseDate.yesterday;
+						ValidatorManager._validator = new ActivityValidator();
+						ValidatorManager._mailSubject = "ActivityMismatchReport";
+					}
+					else if (args[ i ].equals( "position" )) {
+						_date = ParseDate.today;
+						ValidatorManager._validator = new PositionValidator( _dbServer, _catalog );
+						ValidatorManager._mailSubject = "PostitionMismatchReport";
+					} else throw new Exception( "ValidatorManager: /type argument inapproporiate" );
 					break;
 				default:
 					break;

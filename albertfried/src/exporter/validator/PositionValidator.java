@@ -18,7 +18,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import utils.poi.PoiRecord;
 import utils.poi.WriteXls;
 import dataWrapper.RecordAbstract;
-import dataWrapper.validator.Position;
+import dataWrapper.exporter.validator.Position;
 
 /**
  * @author Zhenghong Dong
@@ -136,17 +136,13 @@ public class PositionValidator extends ValidatorBase {
 			List<List<? extends PoiRecord>> tmp = new ArrayList<>();
 			tmp.add( tradeBlotterDiffList );
 			tmp.add( GSECDiffList );
-			WriteXls.append( outFileName, "difference", tmp, sizeList );
+			WriteXls.appendMultipleRecords( outFileName, "difference", tmp, sizeList );
 
 			// add reformatted tradesummary stuff
-			tmp = new ArrayList<>();
-			tmp.add( tradeBlotterList );
-			WriteXls.append( outFileName, "position from tradeblotter", tmp, sizeList );
+			WriteXls.appendSingleRecord( outFileName, "position from tradeblotter", tradeBlotterList );
 
 			// add GSEC stuff
-			tmp = new ArrayList<>();
-			tmp.add( GSECList );
-			WriteXls.append( outFileName, "GSECPosition", tmp, sizeList );
+			WriteXls.appendSingleRecord( outFileName, "GSECPosition", GSECList );
 
 		} catch (final FileNotFoundException e) {
 			e.printStackTrace();
