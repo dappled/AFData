@@ -56,7 +56,7 @@ public class ETBImporter extends ImporterBase {
 				}
 				line = nextLine;
 			}
-			// check last line for file integration
+			// check trailer for file integration
 			if ((list = line.split( "\\|" )).length != 2) throw new Exception(
 					"ETBImporter: " + localFile + " corrupted, inapproporate line: " + line );
 			else if (count != Integer.parseInt( list[ 1 ] )) throw new Exception(

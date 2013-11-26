@@ -41,7 +41,7 @@ public class PMRequirementImporter extends ImporterBase {
 				list = line.split( "\\|" );
 				if (list.length == 5) {
 					if (count != Integer.parseInt( list[ 3 ].trim() )) throw new Exception(
-							"PMRequirementImporter: " + localFile + " corrupted, number of records read is not same as in the tailer" );
+							"PMRequirementImporter: " + localFile + " corrupted, number of records read is not same as in the trailer" );
 				} else if (list.length != 20) throw new Exception(
 						"PMRequirementImporter: " + localFile + " corrupted, inapproporate line: " + line );
 				else {

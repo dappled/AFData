@@ -47,7 +47,7 @@ public class ActivityValidator extends ValidatorBase {
 			while ((line = reader.readLine()) != null) {
 				final String[] list = line.split( "\\|" );
 				if (list.length == 5) {
-					break; // last line
+					break; // trailer
 				} else if (list.length != 293) throw new Exception(
 						"ActivityValidator: TrdFile corrupted, inapproporate line: " + line );
 				else {
@@ -92,15 +92,15 @@ public class ActivityValidator extends ValidatorBase {
 		final String tradeDate = ParseDate.standardFromyyyyMMdd( list[ 72 ].trim() ) ;
 		// symbol
 		String symbol;
-		if (list[ 14 ].trim().toLowerCase().equals( "equity" )) {
+		String type = list[ 14 ].trim().toLowerCase();
+		if (type.equals( "equity" )) {
 			symbol = list[ 16 ].trim();
-		} else if (list[ 14 ].trim().toLowerCase().equals( "option" )) {
+		} else if (type.equals( "option" )) {
 			symbol = ActivityValidator.parseOptionName( list[ 65 ].trim() );
-		} else throw new Exception( "ActivityValidator: record not equity nor option." );
+		} else throw new Exception( "ActivityValidator: record neither equity nor option." );
 		// qty
 		final int qty = (int) Double.parseDouble( list[ 70 ].trim() ); // not sure
 		// type
-		String type = list[ 14 ].trim().toLowerCase();
 		if (!list[ 203 ].trim().equals( "" )) {
 			type += ("," + list[ 203 ].trim()); // "OA" "OE" "AJC" etc
 		} else if (list[ 200 ].startsWith( "A/C" ) || list[ 200 ].startsWith( "TA/C" )) {

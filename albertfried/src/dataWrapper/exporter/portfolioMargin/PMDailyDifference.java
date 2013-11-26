@@ -12,12 +12,13 @@ import dataWrapper.PMAbstract;
  */
 public class PMDailyDifference extends PMAbstract {
 	private final float	_difference;
-	private final float	_requirement;
+	private final float	_requirementToday, _requirementYesterday;
 
-	public PMDailyDifference(String importDate, String symbol, float requirement, float difference) {
+	public PMDailyDifference(String importDate, String symbol, float requirementToday, float requirementYesterday, float difference) {
 		super( importDate, symbol );
 		_difference = difference;
-		_requirement = requirement;
+		_requirementToday = requirementToday;
+		_requirementYesterday = requirementYesterday;
 	}
 
 	@Override
@@ -25,7 +26,8 @@ public class PMDailyDifference extends PMAbstract {
 		int i = index;
 		final CreationHelper createHelper = wb.getCreationHelper();
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getSymbol() ) );
-		row.createCell( i++ ).setCellValue( getRequirement() );
+		row.createCell( i++ ).setCellValue( getRequirementToday() );
+		row.createCell( i++ ).setCellValue( getRequirementYesterday() );
 		row.createCell( i++ ).setCellValue( getDifference() );
 	}
 	
@@ -37,14 +39,18 @@ public class PMDailyDifference extends PMAbstract {
 	}
 
 	public static int size() {
-		return 3;
+		return 4;
 	}
 
 	public float getDifference() {
 		return _difference;
 	}
 
-	public float getRequirement() {
-		return _requirement;
+	public float getRequirementToday() {
+		return _requirementToday;
+	}
+	
+	public float getRequirementYesterday() {
+		return _requirementYesterday;
 	}
 }

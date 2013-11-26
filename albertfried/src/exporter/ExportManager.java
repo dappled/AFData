@@ -15,9 +15,8 @@ public class ExportManager {
 
 	public static void main(final String[] args) throws Exception {
 		ExportManager.parseArgs( args );
-		// System.out.println(reader.getDate(gsFile));
 		ExportManager._exporter.report( ExportManager._outFile, ParseDate.today );
-		//_exporter.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
+		_exporter.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
 		_exporter.close();
 	}
 

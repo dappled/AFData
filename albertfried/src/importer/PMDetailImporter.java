@@ -41,7 +41,7 @@ public class PMDetailImporter extends ImporterBase {
 				list = line.split( "\\|" );
 				if (list.length == 5) {
 					if (count != Integer.parseInt( list[ 3 ].trim() )) throw new Exception(
-							"PMDetialImporter: " + localFile + " corrupted, number of records read is not same as in the tailer" );
+							"PMDetialImporter: " + localFile + " corrupted, number of records read is not same as in the trailer" );
 				} else if (list.length != 36) throw new Exception(
 						"PMDetailImporter: " + localFile + " corrupted, inapproporate line: " + line );
 				else {

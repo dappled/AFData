@@ -12,17 +12,21 @@ import dataWrapper.PMAbstract;
  */
 public class PMDailyRecord extends PMAbstract {
 	private final float	_risk, _minimum, _requirement;
+	private String		_largestNode;
+	private final String	_symbolType;
 
 	/**
 	 * @param date
 	 * @param symbol
 	 * @param requirement
 	 */
-	public PMDailyRecord(String date, String symbol, float requirement, float risk, float minimum) {
+	public PMDailyRecord(String date, String symbol, String symbolType, float requirement, float risk, float minimum) {
 		super( date, symbol );
+		_symbolType = symbolType;
 		_risk = risk;
 		_minimum = minimum;
 		_requirement = requirement;
+		_largestNode = "";
 	}
 
 	@Override
@@ -33,8 +37,9 @@ public class PMDailyRecord extends PMAbstract {
 		row.createCell( i++ ).setCellValue( getRequirement() );
 		row.createCell( i++ ).setCellValue( getRisk() );
 		row.createCell( i++ ).setCellValue( getMinumum() );
+		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getLargestNode() ) );
 	}
-	
+
 	@Override
 	public int writeNextForSingleRecord(Workbook wb, Sheet sheet, int index) {
 		Row row = sheet.createRow( index++ );
@@ -43,7 +48,7 @@ public class PMDailyRecord extends PMAbstract {
 	}
 
 	public static int size() {
-		return 4;
+		return 5;
 	}
 
 	public float getMinumum() {
@@ -58,4 +63,15 @@ public class PMDailyRecord extends PMAbstract {
 		return _requirement;
 	}
 
+	public String getLargestNode() {
+		return _largestNode;
+	}
+
+	public void setLargestNode(String reason) {
+		_largestNode = reason;
+	}
+	
+	public String getSymbolType() {
+		return _symbolType;
+	}
 }

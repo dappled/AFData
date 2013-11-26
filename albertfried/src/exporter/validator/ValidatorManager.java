@@ -10,7 +10,7 @@ public class ValidatorManager {
 	private static ValidatorBase	_validator;
 	// used for database search, database imported date will always be at today's date ( since they are imported every
 	// 5:00 AM ), but they are indeed yesterday's data. 
-	// Update: "today"'s date should be the day after yesterday
+	// Update: "today"'s date should be the day after yesterday, so we can test on Monday for last day, however, this pr
 	private static String			_date;
 	private static String			_mailSubject;
 	private static String			_dbServer;
