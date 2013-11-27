@@ -6,7 +6,7 @@ import utils.ParseDate;
  * @author Zhenghong Dong
  */
 public class ExportManager {
-	private static String		_addressList;
+	private static String		_addressList	= null;
 	private static String		_mailSubject;
 	private static String		_outFile;
 	private static ExporterBase	_exporter;
@@ -16,7 +16,9 @@ public class ExportManager {
 	public static void main(final String[] args) throws Exception {
 		ExportManager.parseArgs( args );
 		ExportManager._exporter.report( ExportManager._outFile, ParseDate.today );
-		_exporter.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
+		if (_addressList != null) {
+			_exporter.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
+		}
 		_exporter.close();
 	}
 

@@ -3,19 +3,19 @@ package exporter.validator;
 import utils.ParseDate;
 
 public class ValidatorManager {
-	private static String			_addressList;
+	private static String			_addressList	= null;
 	private static String			_localFile;
 	private static String			_brokerFile;
 	private static String			_outFile;
 	private static ValidatorBase	_validator;
 	// used for database search, database imported date will always be at today's date ( since they are imported every
-	// 5:00 AM ), but they are indeed yesterday's data. 
+	// 5:00 AM ), but they are indeed yesterday's data.
 	// Update: "today"'s date should be the day after yesterday, so we can test on Monday for last day, however, this pr
 	private static String			_date;
 	private static String			_mailSubject;
 	private static String			_dbServer;
 	private static String			_catalog;
-	private static boolean			_wipe = false;
+	private static boolean			_wipe			= false;
 
 	public static void main(final String[] args) throws Exception {
 		ValidatorManager.parseArgs( args );
@@ -24,8 +24,9 @@ public class ValidatorManager {
 				.validate( ValidatorManager._localFile, ValidatorManager._brokerFile,
 						ValidatorManager._outFile,
 						ValidatorManager._date, _wipe );
-		_validator.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday) );
-
+		if (_addressList != null) {
+			_validator.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
+		}
 		_validator.close();
 	}
 
@@ -67,7 +68,7 @@ public class ValidatorManager {
 					_catalog = args[ ++i ];
 					break;
 				case "/wipe":
-					_wipe = Boolean.parseBoolean( args[++i] );
+					_wipe = Boolean.parseBoolean( args[ ++i ] );
 					break;
 				case "/type":
 					if (args[ ++i ].equals( "activity" )) {

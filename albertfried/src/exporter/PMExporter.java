@@ -53,20 +53,17 @@ public class PMExporter extends ExporterBase {
 	/** generate daily difference list for given day */
 	private List<PMAbstract> getDifference(final String today) {
 		List<PMAbstract> diffList = new ArrayList<>();
-		final String query = "SELECT * from " +
-				"(SELECT today.[Symbol], today.[Requirement] as RequirementToday, yesterday.[Requirement] as RequirementYesterday, " +
-				"today.[Requirement] - yesterday.[Requirement] as RequirementChange " +
-				"FROM (select symbol, symboltype, requirement from [Clearing].[dbo].[PMRequirement] " +
+		final String query = "select * from ( " +
+				"select isnull(today.Symbol, yesterday.Symbol) as Sym, today.Requirement as tR, " +
+				"yesterday.Requirement as yR, (isnull(today.Requirement,0) - isnull(yesterday.Requirement,0)) as Change from " +
+				"((select Symbol, Requirement from Clearing.dbo.PMRequirement " +
 				"where ImportDate = cast('" + today + "' as Date)) as today " +
-				"left join " +
-				"(select symbol, symboltype, requirement from [Clearing].[dbo].[PMRequirement] " +
-				"where ImportDate = (select MAX(ImportDate) " +
-				"from Clearing.dbo.PMRequirement " +
-				"where ImportDate < (select MAX(importDate) from Clearing.dbo.PMRequirement)" +
-				")) as yesterday " +
-				"on yesterday.Symbol = today.Symbol and yesterday.SymbolType = today.SymbolType) as re " +
-				"where re.RequirementChange <> 0 " +
-				"order by re.RequirementChange desc";
+				"full outer join " +
+				"(select Symbol, Requirement from [Clearing].[dbo].[PMRequirement] " +
+				"where ImportDate =(select MAX(importDate) from Clearing.dbo.PMRequirement where ImportDate < CAST('" + today + "' as DATE))) as yesterday " +
+				"on today.Symbol = yesterday.Symbol)) as tmp " +
+				"where tmp.Change <> 0 " +
+				"order by Change desc";
 
 		try (Statement stmt = _conn.createStatement()) {
 

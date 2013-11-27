@@ -1,2 +1,0 @@
-java -jar C:\Users\rn.ALBERTFRIED\Desktop\eclipse\git\Dong\DataValidation\out\datavalidation.jar /tradeDateIsYesterday false /dbserver PROP-RN\SQLEXPRESS /localFile [Clearing].[dbo].[GSECPositions] /brokerFile [Clearing].[dbo].[GSECPositions] /localFile [Clearing].[dbo].[Position_from_TradeBlotter] /outFile c:\temp\PositionMismatch[MMddyyyy].xls /mail rn@albertfried.com,nsheridan@albertfried.com,bmason@albertfried.com /type Position
-

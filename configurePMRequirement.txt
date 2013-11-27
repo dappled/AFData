@@ -1,0 +1,1 @@
+/dbserver PROP-RN\SQLEXPRESS /dbName [Clearing].[dbo].[PMRequirement] /brokerFile "c:\temp\[yyyyMMdd]_42.0_vinepmsb" /type pmsb /wipe true

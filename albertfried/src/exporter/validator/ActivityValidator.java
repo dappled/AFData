@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -128,16 +127,18 @@ public class ActivityValidator extends ValidatorBase {
 			final String namePart = st.nextToken();
 			final String datePart = st.nextToken() + " " + st.nextToken() + " " + st.nextToken();
 			final String[] lastPart = { st.nextToken(), st.nextToken() };
-			final DecimalFormat format = new DecimalFormat( "0.#" );
-
-			return String.format( "%s %s %s %s", namePart, ParseDate.standardFromStringMonth( datePart ),
-					lastPart[ 1 ], format.format( Double.parseDouble( lastPart[ 0 ] ) ) );
+			final double strike = Double.parseDouble( lastPart[0] );
+			String ret = String.format( "%s %s %s", namePart, ParseDate.standardFromStringMonth( datePart ),
+					lastPart[ 1 ] );
+			if (strike == (int) strike) 
+				return String.format( "%s %d", ret, (int)strike );
+			else 
+				return String.format( "%s %s", ret, strike );
 		} catch (final Exception e) {
-			System.err.println( "TrdeValidator: Failed to parse option name " + data );
+			System.err.println( "TrdeValidator: Failed to parse option name " + data + ", will use empty string");
 			e.printStackTrace();
-			System.exit( -1 );
+			return "";
 		}
-		return null;
 	}
 
 	@Override

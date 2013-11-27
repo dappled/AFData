@@ -1,1 +1,0 @@
-/dbserver PROP-RN\SQLEXPRESS /dbName [Trading].[dbo].[ETB] /brokerFile "c:\temp\easytoborrowlist.txt" /type etb /wipe true
