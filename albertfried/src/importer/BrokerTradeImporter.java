@@ -10,17 +10,18 @@ import java.sql.SQLException;
 /**
  * @author Zhenghong Dong
  */
-public class ETBImporter extends ImporterBase {
-
-	public ETBImporter(String dbServer, String catalog) {
+public class BrokerTradeImporter extends ImporterBase{
+	/***********************************************************************
+	 * Constructor
+	 ***********************************************************************/
+	public BrokerTradeImporter(String dbServer, String catalog) {
 		super( dbServer, catalog );
 	}
 
 	@Override
 	protected void dumpHelper(String localFile, String dbName, String tradeDate) throws Exception {
 		PreparedStatement insertETB = null;
-		String insertString = "insert into " + dbName + " (ImportedDate,Symbol) values (cast('"
-				+ tradeDate + "' as Date),?)";
+		String insertString = "insert into " + dbName + " (Symbol,Maturity,StrikePrice,CallPut,Side, Quantity,AvgPrice,Broker) values (?,?,?,?,?,?,?,?)";
 
 		BufferedReader reader = null;
 		try {

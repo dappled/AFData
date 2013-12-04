@@ -199,7 +199,7 @@ public class ParseDate {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime( date );
 
-		return String.format( "%d/%d/%d", cal.get( Calendar.MONTH ) + 1, cal.get( Calendar.DATE ),
+		return String.format( "%s/%s/%d",fillDigitalString(cal.get( Calendar.MONTH ) + 1), fillDigitalString(cal.get( Calendar.DATE )),
 				cal.get( Calendar.YEAR ) );
 	}
 	
@@ -217,7 +217,7 @@ public class ParseDate {
 			cal.add( Calendar.DAY_OF_MONTH, +1 );
 		} while (ParseDate.isHoliday( cal ));
 		
-		return String.format( "%d/%d/%d", cal.get( Calendar.MONTH ) + 1, cal.get( Calendar.DATE ),
+		return String.format( "%s/%s/%d", fillDigitalString(cal.get( Calendar.MONTH ) + 1), fillDigitalString(cal.get( Calendar.DATE )),
 				cal.get( Calendar.YEAR ) );
 	}
 
@@ -237,7 +237,7 @@ public class ParseDate {
 			dayOfWeek = cal.get( Calendar.DAY_OF_WEEK );
 		} while (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY || ParseDate.isHoliday( cal ));
 
-		return String.format( "%d/%d/%d", cal.get( Calendar.MONTH ) + 1, cal.get( Calendar.DATE ),
+		return String.format( "%s/%s/%d", fillDigitalString(cal.get( Calendar.MONTH ) + 1), fillDigitalString(cal.get( Calendar.DATE )),
 				cal.get( Calendar.YEAR ) );
 	}
 

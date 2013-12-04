@@ -20,7 +20,7 @@ public class PMRequirementImporter extends ImporterBase {
 	protected void dumpHelper(String localFile, String dbName, String tradeDate) throws Exception {
 		PreparedStatement insertRequirement = null;
 		String insertString = "insert into " + dbName
-				+ " (ImportDate,Symbol,SymbolType,Requirement,Risk,Minimum) values (cast('"
+				+ " (ImportedDate,Symbol,SymbolType,Requirement,Risk,Minimum) values (cast('"
 				+ tradeDate + "' as Date),?,?,?,?,?)";
 
 		BufferedReader reader = null;

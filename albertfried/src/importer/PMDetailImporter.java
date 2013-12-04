@@ -20,7 +20,7 @@ public class PMDetailImporter extends ImporterBase {
 	protected void dumpHelper(String localFile, String dbName, String tradeDate) throws Exception {
 		PreparedStatement insertPMDetail = null;
 		String insertString = "insert into " + dbName
-				+ " (ImportDate,ClassGroupId,BasketId,ProductGroupId,Symbol,PutCall,Maturity,Strike,Quantity,Price,Down5,Down4,Down3,Down2,Down1,Up1,Up2,Up3,Up4,Up5)"
+				+ " (ImportedDate,ClassGroupId,BasketId,ProductGroupId,Symbol,PutCall,Maturity,Strike,Quantity,Price,Down5,Down4,Down3,Down2,Down1,Up1,Up2,Up3,Up4,Up5)"
 				+ " values (cast('" + tradeDate + "' as Date),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
 		BufferedReader reader = null;

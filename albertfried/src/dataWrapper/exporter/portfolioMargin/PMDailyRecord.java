@@ -12,7 +12,7 @@ import dataWrapper.PMAbstract;
  */
 public class PMDailyRecord extends PMAbstract {
 	private final float	_risk, _minimum, _requirement;
-	private String		_largestNode;
+	private String		_reason;
 	private final String	_symbolType;
 
 	/**
@@ -26,7 +26,7 @@ public class PMDailyRecord extends PMAbstract {
 		_risk = risk;
 		_minimum = minimum;
 		_requirement = requirement;
-		_largestNode = "";
+		_reason = "";
 	}
 
 	@Override
@@ -37,7 +37,7 @@ public class PMDailyRecord extends PMAbstract {
 		row.createCell( i++ ).setCellValue( getRequirement() );
 		row.createCell( i++ ).setCellValue( getRisk() );
 		row.createCell( i++ ).setCellValue( getMinumum() );
-		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getLargestNode() ) );
+		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getReason() ) );
 	}
 
 	@Override
@@ -63,12 +63,12 @@ public class PMDailyRecord extends PMAbstract {
 		return _requirement;
 	}
 
-	public String getLargestNode() {
-		return _largestNode;
+	public String getReason() {
+		return _reason;
 	}
 
-	public void setLargestNode(String reason) {
-		_largestNode = reason;
+	public void setReason(String reason) {
+		_reason = reason;
 	}
 	
 	public String getSymbolType() {

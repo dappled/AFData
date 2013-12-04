@@ -59,6 +59,10 @@ public class ImporterManager {
 					// portfolio margin ineligible datafile layout
 					else if (args[ i ].equals( "pmdb" )) {
 						_importer = new PMDetailImporter( _dbServer, _catalog );
+					} 
+					// broker trade 
+					else if (args[i].equals( "brokerTrade")) {
+						_importer = new BrokerTradeImporter(_dbServer, _catalog);
 					}
 					else throw new Exception( "ImporterManager: /type argument unsopported: " + args[i] );
 					break;

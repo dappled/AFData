@@ -57,10 +57,10 @@ public class PMExporter extends ExporterBase {
 				"select isnull(today.Symbol, yesterday.Symbol) as Sym, today.Requirement as tR, " +
 				"yesterday.Requirement as yR, (isnull(today.Requirement,0) - isnull(yesterday.Requirement,0)) as Change from " +
 				"((select Symbol, Requirement from Clearing.dbo.PMRequirement " +
-				"where ImportDate = cast('" + today + "' as Date)) as today " +
+				"where importedDate = cast('" + today + "' as Date)) as today " +
 				"full outer join " +
 				"(select Symbol, Requirement from [Clearing].[dbo].[PMRequirement] " +
-				"where ImportDate =(select MAX(importDate) from Clearing.dbo.PMRequirement where ImportDate < CAST('" + today + "' as DATE))) as yesterday " +
+				"where importedDate = (select MAX(importedDate) from Clearing.dbo.PMRequirement where importedDate < CAST('" + today + "' as DATE))) as yesterday " +
 				"on today.Symbol = yesterday.Symbol)) as tmp " +
 				"where tmp.Change <> 0 " +
 				"order by Change desc";
@@ -69,7 +69,7 @@ public class PMExporter extends ExporterBase {
 
 			ResultSet rs = stmt.executeQuery( query );
 			while (rs.next()) {
-				diffList.add( new PMDailyDifference( today, // importDate
+				diffList.add( new PMDailyDifference( today, // importedDate
 						rs.getString( 1 ), // symbol
 						rs.getFloat( 2 ), // requirementToday
 						rs.getFloat( 3 ), // requirementYesterday
@@ -86,7 +86,7 @@ public class PMExporter extends ExporterBase {
 		List<PMAbstract> rankList = new ArrayList<>();
 		final String query = "select symbol, symbolType, requirement as Requirement, risk, minimum " +
 				"from Clearing.dbo.PMRequirement " +
-				"where ImportDate = CAST('" + today + "' as DATE) " +
+				"where importedDate = CAST('" + today + "' as DATE) " +
 				"order by Requirement desc";
 
 		try (Statement stmt = _conn.createStatement()) {
@@ -95,15 +95,14 @@ public class PMExporter extends ExporterBase {
 			PMDailyRecord record = null;
 			PMDailyAnalysis res = null;
 			while (rs.next()) {
-				record = new PMDailyRecord( today, // importDate
+				record = new PMDailyRecord( today, // importedDate
 						rs.getString( 1 ).trim(), // symbol
 						rs.getString( 2 ).trim(), // symbolType
 						rs.getFloat( 3 ), // requirement
 						rs.getFloat( 4 ), // risk
 						rs.getFloat( 5 ) ); // minimum
-				// risk < minimum
 				if ((res = _analysis.get( record.getSymbol())) != null ) {
-					record.setLargestNode( res.getLargestMovementNode() );
+					record.setReason( res.getReason() );
 				}
 				rankList.add( record);
 			}
@@ -122,15 +121,14 @@ public class PMExporter extends ExporterBase {
 		// get all PM's detail report with whose symbol's requirement = risk on today
 		final String query = "SELECT t2.SymbolType,t1.ClassGroupId, t1.productgroupid, t1.Symbol, [Maturity],[putCall],[Strike],[Quantity],[Price] " +
 				",Down5, Down4, Down3, Down2, Down1 " +
-				",up1, up2, up3, Up4, Up5, requirement as Requirement " +
+				",up1, up2, up3, Up4, Up5, Requirement, Risk " +
 				"FROM " +
 				"(select * from [Clearing].[dbo].[PMDetail] " +
-				"where ImportDate = CAST('" + today + "' as DATE)) as t1 " +
+				"where ImportedDate = CAST('" + today + "' as DATE)) as t1 " +
 				"join " +
-				"(select Symbol, SymbolType, Requirement " +
+				"(select Symbol, SymbolType, Requirement, Risk " +
 				"from Clearing.dbo.PMRequirement " +
-				"where ImportDate = CAST('" + today + "' as DATE) " +
-				"and Requirement = Risk) as t2 " +
+				"where ImportedDate = CAST('" + today + "' as DATE)) as t2 " +
 				"on t2.Symbol = t1.ClassGroupId or t2.Symbol = t1.ProductGroupId or (t1.Symbol = 'spy' and t2.Symbol = 'usidx') " +
 				"order by Requirement desc";
 
@@ -156,7 +154,7 @@ public class PMExporter extends ExporterBase {
 						throw new Exception("PMExporter: PM record symbol type should be on of C/P/O");
 				}
 				int i = 4; // make life easier when add new fields
-				detail = new PMDailyDetail( today, // importDate
+				detail = new PMDailyDetail( today, // importedDate
 						id, // id
 						rs.getString( i++ ).trim(), // symbol
 						ParseDate.standardFromSQLDate( rs.getDate( i++ ) ), // maturity
@@ -176,7 +174,7 @@ public class PMExporter extends ExporterBase {
 						rs.getFloat( i++ ) ); // up5
 				// if this symbol is already in the map, add it the to analysis
 				if (!_analysis.containsKey( id )) {
-					_analysis.put( id, new PMDailyAnalysis( today, id, rs.getFloat( i++ ) ) );
+					_analysis.put( id, new PMDailyAnalysis( today, id, rs.getFloat( i++ ), rs.getFloat(  i++ ) ) );
 				}
 				_analysis.get( id ).add( detail );
 			}
