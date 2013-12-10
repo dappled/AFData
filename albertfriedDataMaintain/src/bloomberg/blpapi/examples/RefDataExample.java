@@ -275,7 +275,7 @@ public class RefDataExample
         }
 
         if (d_fields.isEmpty()) {
-            d_fields.add("PX_LAST");
+            d_fields.add("DVD_HIST");
         }
 
         return true;

@@ -10,7 +10,7 @@ import bloomberg.BbgNames.FieldValue;
 import bloomberg.BbgNames.PeriodicityAdjustment;
 import bloomberg.BbgNames.PeriodicitySelection;
 import bloomberg.beans.FutDiv;
-import bloomberg.beans.HisDiv;
+import bloomberg.beans.HistoricalDividendTimeUnit;
 import bloomberg.beans.ReferenceAbstarct;
 import bloomberg.beans.SecTS;
 import bloomberg.beans.TimeSeries;
@@ -54,7 +54,12 @@ public class BbgDataGrabber {
 			_session = null;
 		}
 	}
-
+	
+	public void stop() throws InterruptedException {
+		if (_session != null) {
+			_session.stop();
+		}
+	}
 	public Map<String, SecTS> getHistoricalData(List<String> name, List<String> fields, String startDate, String endDate, String adj, String sel)
 			throws Exception {
 		Service refDataService = _session.getService( "//blp/refdata" );
@@ -83,9 +88,6 @@ public class BbgDataGrabber {
 		// wait for events from session.
 		Map<String, SecTS> ret = new HashMap<>();
 		eventLoopTS( _session, ret, SecTS.class );
-
-		_session.stop();
-
 		return ret;
 	}
 
@@ -172,13 +174,14 @@ public class BbgDataGrabber {
 			if (fields.numValues() > 0) {
 				System.out.println( "FIELD\t\tVALUE" );
 				System.out.println( "-----\t\t-----" );
-				String date = fields.getElementAsDate( BbgNames.DATE ).toString();
-				tmp.addNode( date );
+
 				for (int j = 0; j < fields.numValues(); ++j) {
 					Element fieldData = fields.getValueAsElement( j );
-					System.out.println( fieldData.name() + "\t\t" +
-							fieldData.getValueAsString() );
+					/*System.out.println( fieldData.name() + "\t\t" +
+							fieldData.getValueAsString() );*/
 
+					String date = fieldData.getElementAsDate( BbgNames.DATE ).toString();
+					tmp.addNode( date );
 					if (fieldData.hasElement( FieldValue.open )) tmp.setOpen( date, fieldData.getElementAsFloat64( FieldValue.open ) );
 					if (fieldData.hasElement( FieldValue.high )) tmp.setHigh( date, fieldData.getElementAsFloat64( FieldValue.high ) );
 					if (fieldData.hasElement( FieldValue.low )) tmp.setLow( date, fieldData.getElementAsFloat64( FieldValue.low ) );
@@ -208,7 +211,7 @@ public class BbgDataGrabber {
 
 		Element field = request.getElement( "fields" );
 		// if historical div
-		if (clazz.equals( HisDiv.class )) {
+		if (clazz.equals( HistoricalDividendTimeUnit.class )) {
 			field.appendValue( FieldValue.declaredDate );
 			field.appendValue( FieldValue.exDate );
 			field.appendValue( FieldValue.recordDate );
@@ -286,8 +289,8 @@ public class BbgDataGrabber {
 			}
 
 			T tmp = clazz.newInstance();
-			if (tmp instanceof HisDiv) {
-				readHisDiv( security, (HisDiv) tmp );
+			if (tmp instanceof HistoricalDividendTimeUnit) {
+				readHisDiv( security, (HistoricalDividendTimeUnit) tmp );
 			} else {
 				throw new Exception( "Now only support reading historical security time series" );
 			}
@@ -307,7 +310,7 @@ public class BbgDataGrabber {
 		}
 	}
 
-	private void readHisDiv(Element security, HisDiv tmp) throws InstantiationException, IllegalAccessException {
+	private void readHisDiv(Element security, HistoricalDividendTimeUnit tmp) throws InstantiationException, IllegalAccessException {
 		if (security.hasElement( BbgNames.FIELD_DATA )) {
 			Element fields = security.getElement( BbgNames.FIELD_DATA );
 			if (fields.numValues() > 0) {
@@ -317,15 +320,6 @@ public class BbgDataGrabber {
 				int numElements = fields.numElements();
 				for (int j = 0; j < numElements; ++j) {
 					Element field = fields.getElement( j );
-					System.out.println( field.name() + "\t\t" +
-							field.getValueAsString() );
-					field.appendValue( FieldValue.declaredDate );
-					field.appendValue( FieldValue.exDate );
-					field.appendValue( FieldValue.recordDate );
-					field.appendValue( FieldValue.payableDate );
-					field.appendValue( FieldValue.divAmount );
-					field.appendValue( FieldValue.divFreq );
-					field.appendValue( FieldValue.divType );
 					switch (field.name().toString()) {
 						case FieldValue.declaredDate:
 							tmp.setDeclareDate( field.getValueAsString() );
@@ -371,7 +365,9 @@ public class BbgDataGrabber {
 				Arrays.asList( FieldValue.last, FieldValue.open ), "20110101",
 				"20130101",
 				PeriodicityAdjustment.actual, PeriodicitySelection.weekly );
-		Map<String, HisDiv> res2 = grabber.getReferenceData( Arrays.asList( "MSFT US EQUITY", "GS US EQUITY" ), HisDiv.class, null );
+		Map<String, HistoricalDividendTimeUnit> res2 = grabber.getReferenceData( Arrays.asList( "MSFT US EQUITY", "GS US EQUITY" ), HistoricalDividendTimeUnit.class, null );
+		
+		grabber.stop();
 		System.out.printf( "END" );
 	}
 }

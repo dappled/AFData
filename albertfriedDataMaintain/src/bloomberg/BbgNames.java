@@ -62,5 +62,6 @@ public class BbgNames {
 		public static final String divType = "Dividend Type";
 		public static final String OptionImpliedLow = "OptionImpliedLow";
 		public static final String OptionImpliedHigh = "Opt";
+		public static final String DivPerShare = "EQY_DPS";
 	}
 }

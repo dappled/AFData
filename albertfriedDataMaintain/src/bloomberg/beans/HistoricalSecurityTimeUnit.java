@@ -5,7 +5,7 @@ package bloomberg.beans;
 /**
  * @author Zhenghong Dong
  */
-public class HistoricalTimeUnit extends TimeUnit{
+public class HistoricalSecurityTimeUnit extends TimeUnit{
 	private static final long	serialVersionUID	= 1792434071620051534L;
 	private double	_last;
 	private double	_ask;
@@ -22,7 +22,7 @@ public class HistoricalTimeUnit extends TimeUnit{
 	private double	_callIV;
 	private double	_putIV;
 
-	public HistoricalTimeUnit() {}
+	public HistoricalSecurityTimeUnit() {}
 	
 	public double getLast() {
 		return _last;

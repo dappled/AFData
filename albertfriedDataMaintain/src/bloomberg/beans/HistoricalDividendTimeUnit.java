@@ -4,7 +4,7 @@ package bloomberg.beans;
  * @author Zhenghong Dong
  */
 
-public class HisDiv extends ReferenceAbstarct {
+public class HistoricalDividendTimeUnit extends TimeUnit{
 	private static final long	serialVersionUID	= -344830944108719801L;
 	private String	declareDate;
 	private  String	exDate;
