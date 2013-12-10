@@ -232,4 +232,7 @@ public class PMExporter extends ExporterBase {
 			e.printStackTrace();
 		}
 	}
+
+	@Override
+	public void uploadFtp(String _outFile, String _ftpAddress) {}
 }

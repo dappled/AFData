@@ -30,7 +30,7 @@ public class PMDailyDifference extends PMAbstract {
 		row.createCell( i++ ).setCellValue( getRequirementYesterday() );
 		row.createCell( i++ ).setCellValue( getDifference() );
 	}
-	
+
 	@Override
 	public int writeNextForSingleRecord(Workbook wb, Sheet sheet, int index) {
 		Row row = sheet.createRow( index++ );
@@ -49,7 +49,7 @@ public class PMDailyDifference extends PMAbstract {
 	public float getRequirementToday() {
 		return _requirementToday;
 	}
-	
+
 	public float getRequirementYesterday() {
 		return _requirementYesterday;
 	}

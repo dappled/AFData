@@ -97,8 +97,7 @@ public class PMDailyAnalysis extends PMAbstract {
 		} else {
 			if (_movementIdx == -1) return j; // ignore symbol with less risk than minimal
 			final CreationHelper createHelper = wb.getCreationHelper();
-			Row row = sheet.createRow( j++ );
-			row = sheet.createRow( j++ ); // jump a row
+			Row row = sheet.createRow( ++j );
 			// add header
 			row.createCell( 0 ).setCellValue( createHelper.createRichTextString( "Id:" ) );
 			row.createCell( 1 ).setCellValue( createHelper.createRichTextString( getSymbol() ) );
@@ -106,7 +105,7 @@ public class PMDailyAnalysis extends PMAbstract {
 			row.createCell( 3 ).setCellValue( createHelper.createRichTextString( _reason ) );
 			row.createCell( 4 ).setCellValue( createHelper.createRichTextString( "Requirement" ) );
 			row.createCell( 5 ).setCellValue( getRequirement() );
-			row = sheet.createRow( j++ );
+			row = sheet.createRow( ++j );
 			row.createCell( 0 ).setCellValue( createHelper.createRichTextString( "Symbol:" ) );
 			row.createCell( 1 ).setCellValue( createHelper.createRichTextString( "Maturity:" ) );
 			row.createCell( 2 ).setCellValue( createHelper.createRichTextString( "PutCall:" ) );
@@ -118,7 +117,7 @@ public class PMDailyAnalysis extends PMAbstract {
 			for (PMDailyDetail record : _details) {
 				// only write those records with movement negative, those who we are really interested in
 				if (record.getMovements()[ _movementIdx ] < 0) {
-					row = sheet.createRow( j++ );
+					row = sheet.createRow( ++j );
 					record.writeNextForAnalysis( wb, row, 0, _movementIdx );
 				}
 			}

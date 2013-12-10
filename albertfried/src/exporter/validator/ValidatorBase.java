@@ -36,7 +36,7 @@ public abstract class ValidatorBase extends GeneralImporterExporter {
 	 */
 	public void validate(final String localFile, final String brokerFile, final String outFile, final String tradeDate, final boolean wipe)
 			throws Exception {
-		// wipe last 7 day's data in GSEC position
+		// wipe GSEC position who is older than 7 days
 		if (wipe == true) {		
 			wipeData( brokerFile );
 			

@@ -128,7 +128,7 @@ public class ActivityValidator extends ValidatorBase {
 			final String datePart = st.nextToken() + " " + st.nextToken() + " " + st.nextToken();
 			final String[] lastPart = { st.nextToken(), st.nextToken() };
 			final double strike = Double.parseDouble( lastPart[0] );
-			String ret = String.format( "%s %s %s", namePart, ParseDate.standardFromStringMonth( datePart ),
+			String ret = String.format( "%s %s %s", namePart, ParseDate.standardFromStringMonthTypeOne( datePart ),
 					lastPart[ 1 ] );
 			if (strike == (int) strike) 
 				return String.format( "%s %d", ret, (int)strike );

@@ -15,14 +15,16 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class ParseDate {
 	// last working day
-	public static String		yesterday = getPreviousWorkingDay( standardFromDate( new Date() ) );
-	// today should be the next day of yesterday.. this is for test only, if we want to run some test on Monday for last friday's report, which should be 
-	// generated last Saturday, today is then last Saturday which is one day after yesterday but not real today. However, we won't never generate report 
+	public static String	yesterday	= getPreviousWorkingDay( standardFromDate( new Date() ) );
+	// today should be the next day of yesterday.. this is for test only, if we want to run some test on Monday for last
+	// friday's report, which should be
+	// generated last Saturday, today is then last Saturday which is one day after yesterday but not real today.
+	// However, we won't never generate report
 	// on Monday morning, they should be generated last Saturday.
-	public static String		testToday = getNextWorkingDay( yesterday );
+	public static String	testToday	= getNextWorkingDay( yesterday );
 	// today's date, usually used as importDate in database
-	public static String		today = standardFromDate( new Date() );
-	
+	public static String	today		= standardFromDate( new Date() );
+
 	/**
 	 * Given string like yyyyMMdd, return localDate format
 	 * @param date the string date
@@ -67,10 +69,30 @@ public class ParseDate {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String standardFromStringMonth(final String date) {
+	public static String standardFromStringMonthTypeOne(final String date) {
 		try {
 			final String[] list = date.split( " " );
-			return ParseDate.fillDigitalString( ParseDate.getMonth( list[ 0 ] ) ) + "/" + list[ 1 ].trim() + "/"
+			return ParseDate.fillDigitalString( ParseDate.getMonth( list[ 0 ] ) ) + "/"
+					+ fillDigitalString( Integer.parseInt( list[ 1 ].trim() ) ) + "/"
+					+ list[ 2 ].trim();
+		} catch (final Exception e) {
+			e.printStackTrace();
+			System.err.printf( "Failed to parse date to MM/dd/yyyy from %s, will return empty string\n", date );
+			return "";
+		}
+	}
+
+	/**
+	 * Convert things like "20th September 2010" to "09/20/2013"
+	 * @param date
+	 * @return
+	 * @throws Exception
+	 */
+	public static String standardFromStringMonthTypeTwo(final String date) {
+		try {
+			final String[] list = date.split( " " );
+			return ParseDate.fillDigitalString( ParseDate.getMonth( list[ 1 ] ) ) + "/"
+					+ fillDigitalString( Integer.parseInt( list[ 0 ].trim().replaceAll( "[^\\d]", "" ) ) ) + "/"
 					+ list[ 2 ].trim();
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -156,7 +178,8 @@ public class ParseDate {
 
 	/**
 	 * Once again I try to bypass email system to send mismatch report... The email system doesn't
-	 * let me send email with subject containing certain date format like MM/dd/yyyy MMddyyyy for certain days(like 11/15, 11/19...)
+	 * let me send email with subject containing certain date format like MM/dd/yyyy MMddyyyy for certain days(like
+	 * 11/15, 11/19...)
 	 * @param date
 	 * @return
 	 */
@@ -183,13 +206,6 @@ public class ParseDate {
 		return instance.getMonthOfYear();
 	}
 
-	/** change x to 0x */
-	private static String fillDigitalString(final int month) {
-		final NumberFormat format = NumberFormat.getInstance();
-		format.setMinimumIntegerDigits( 2 );
-		return format.format( month );
-	}
-
 	/**
 	 * Given a Java calendar, convert it to String format MM/dd/yyyy
 	 * @param date
@@ -199,10 +215,11 @@ public class ParseDate {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime( date );
 
-		return String.format( "%s/%s/%d",fillDigitalString(cal.get( Calendar.MONTH ) + 1), fillDigitalString(cal.get( Calendar.DATE )),
+		return String.format( "%s/%s/%d", fillDigitalString( cal.get( Calendar.MONTH ) + 1 ),
+				fillDigitalString( cal.get( Calendar.DATE ) ),
 				cal.get( Calendar.YEAR ) );
 	}
-	
+
 	/**
 	 * Return the next day of a certain day in format MM/dd/yyyy
 	 * @param date
@@ -210,14 +227,15 @@ public class ParseDate {
 	 */
 	@SuppressWarnings("deprecation")
 	public static String getNextWorkingDay(final String date) {
-		Calendar cal =Calendar.getInstance();
-		cal.setTime( new Date(date) );
-		
+		Calendar cal = Calendar.getInstance();
+		cal.setTime( new Date( date ) );
+
 		do {
 			cal.add( Calendar.DAY_OF_MONTH, +1 );
 		} while (ParseDate.isHoliday( cal ));
-		
-		return String.format( "%s/%s/%d", fillDigitalString(cal.get( Calendar.MONTH ) + 1), fillDigitalString(cal.get( Calendar.DATE )),
+
+		return String.format( "%s/%s/%d", fillDigitalString( cal.get( Calendar.MONTH ) + 1 ),
+				fillDigitalString( cal.get( Calendar.DATE ) ),
 				cal.get( Calendar.YEAR ) );
 	}
 
@@ -229,7 +247,7 @@ public class ParseDate {
 	@SuppressWarnings("deprecation")
 	public static String getPreviousWorkingDay(final String date) {
 		Calendar cal = Calendar.getInstance();
-		cal.setTime( new Date(date) );
+		cal.setTime( new Date( date ) );
 
 		int dayOfWeek;
 		do {
@@ -237,8 +255,28 @@ public class ParseDate {
 			dayOfWeek = cal.get( Calendar.DAY_OF_WEEK );
 		} while (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY || ParseDate.isHoliday( cal ));
 
-		return String.format( "%s/%s/%d", fillDigitalString(cal.get( Calendar.MONTH ) + 1), fillDigitalString(cal.get( Calendar.DATE )),
+		return String.format( "%s/%s/%d", fillDigitalString( cal.get( Calendar.MONTH ) + 1 ),
+				fillDigitalString( cal.get( Calendar.DATE ) ),
 				cal.get( Calendar.YEAR ) );
+	}
+
+	/**
+	 * Get next Friday
+	 * @param date
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public static int getNextFriday(final long date) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime( new Date( standardFromLong( date ) ) );
+
+		do {
+			cal.add( Calendar.DAY_OF_MONTH, +1 );
+		} while (cal.get( Calendar.DAY_OF_WEEK ) != Calendar.FRIDAY);
+
+		return (cal.get( Calendar.MONTH ) + 1) * 100 +
+				cal.get( Calendar.DATE ) +
+				cal.get( Calendar.YEAR ) * 10000;
 	}
 
 	private static boolean isHoliday(final Calendar cal) {
@@ -251,5 +289,45 @@ public class ParseDate {
 		// more checks
 
 		return false;
+	}
+
+	/**
+	 * Get MM/dd/yyyy from digital yyyyMMdd
+	 * @param sequenceNumber
+	 * @return
+	 */
+	public static String standardFromLong(long date) {
+		String d = String.valueOf( date );
+		return String.format( "%s/%s/%s", d.substring( 4, 6 ), d.substring( 6, 8 ), d.substring( 0, 4 ) );
+	}
+
+	/**
+	 * Get digitial yyyyMMdd from standard
+	 * @param startDate
+	 * @return
+	 */
+	public static long longFromStandard(String startDate) {
+		String[] date = startDate.split( "/" );
+		return Long.parseLong( date[ 2 ] ) * 10000 + Long.parseLong( date[ 0 ] ) * 100 + Long.parseLong( date[ 1 ] );
+	}
+
+	/** change x to 0x */
+	private static String fillDigitalString(final int month) {
+		final NumberFormat format = NumberFormat.getInstance();
+		format.setMinimumIntegerDigits( 2 );
+		return format.format( month );
+	}
+
+	public static void main(String[] args) {
+		long date = 19890515;
+		System.out.println( standardFromLong( date ) );
+		date = getNextFriday( date );
+		System.out.println( date );
+		date = getNextFriday( date );
+		System.out.println( date );
+		System.out.println( longFromStandard( standardFromLong( date ) ) );
+		
+		String date2 = "1st September 2010";
+		System.out.println( standardFromStringMonthTypeTwo( date2 ) );
 	}
 }

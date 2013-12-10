@@ -26,12 +26,12 @@ import javax.mail.internet.MimeMultipart;
  * @author Zhenghong Dong
  */
 public abstract class GeneralImporterExporter {
-	protected Connection _conn;
-	
+	protected Connection	_conn;
+
 	public GeneralImporterExporter() {
 		_conn = null;
 	}
-	
+
 	public GeneralImporterExporter(String dbServer, String catalog) {
 		final String url = "jdbc:sqlserver://" + dbServer + ";integratedSecurity=true;";
 		try {
@@ -42,34 +42,49 @@ public abstract class GeneralImporterExporter {
 			System.exit( 1 );
 		}
 	}
-	
+
 	public void close() throws SQLException {
 		if (_conn != null) _conn.close();
 	}
-	
-	
+
 	/**
 	 * Wipe every data who is older than 7 days
 	 * @param dbName
 	 */
 	public void wipeData(final String dbName) {
 		Calendar cal = Calendar.getInstance();
-		cal.setTime( new Date() );
+		String query;
+		// wipe today's previous import if exists (so we won't import twice for today)
+		if (!dbName.equals( "[Clearing].[dbo].[GSECPositions]" )) {
+			cal.setTime( new Date() );
+			query = "delete"
+					+ " from " + dbName + " where [ImportedDate]=cast('" + ParseDate.standardFromDate( cal.getTime() )
+					+ "' AS DATE)";
+
+			try (Statement stmt = _conn.createStatement()) {
+
+				stmt.executeUpdate( query );
+				// System.out.println(re);
+			} catch (SQLException e) {
+				System.err.println( "Fail to wipe data from " + dbName + " for dates before "
+						+ ParseDate.standardFromDate( cal.getTime() ) );
+			}
+		}
+
+		// wipe data one week older
 		cal.add( Calendar.DAY_OF_MONTH, -7 );
-		final String query = "delete"
-				+ " from " + dbName + " where [ImportedDate]<cast('" + ParseDate.standardFromDate( cal.getTime() )
+		query = "delete"
+				+ " from " + dbName + " where [ImportedDate]<=cast('" + ParseDate.standardFromDate( cal.getTime() )
 				+ "' AS DATE)";
-
 		try (Statement stmt = _conn.createStatement()) {
-
 			stmt.executeUpdate( query );
-			//System.out.println(re);
+			// System.out.println(re);
 		} catch (SQLException e) {
 			System.err.println( "Fail to wipe data from " + dbName + " for dates before "
 					+ ParseDate.standardFromDate( cal.getTime() ) );
 		}
 	}
-	
+
 	/**
 	 * Send the result report to people
 	 * @param outFileName

@@ -11,8 +11,8 @@ import dataWrapper.PMAbstract;
  * @author Zhenghong Dong
  */
 public class PMDailyRecord extends PMAbstract {
-	private final float	_risk, _minimum, _requirement;
-	private String		_reason;
+	private final float		_risk, _minimum, _requirement;
+	private String			_reason;
 	private final String	_symbolType;
 
 	/**
@@ -70,7 +70,7 @@ public class PMDailyRecord extends PMAbstract {
 	public void setReason(String reason) {
 		_reason = reason;
 	}
-	
+
 	public String getSymbolType() {
 		return _symbolType;
 	}

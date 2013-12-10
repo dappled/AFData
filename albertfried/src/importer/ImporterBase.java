@@ -20,7 +20,7 @@ public abstract class ImporterBase extends GeneralImporterExporter {
 		public void dump(final String localFile, final String dbName, final String tradeDate, final boolean wipe)
 				throws Exception {
 			if (wipe == true) {
-				wipeData( dbName);
+				wipeData(dbName);
 			}
 			dumpHelper(localFile, dbName, tradeDate);
 		}
