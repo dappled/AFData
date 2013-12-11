@@ -8,9 +8,24 @@ import java.util.LinkedHashMap;
  */
 @SuppressWarnings("serial")
 public abstract class TimeSeries<T extends TimeUnit> implements Serializable {
-	private String _name;
-	protected LinkedHashMap<String, T> _timeSeriesData;
-	private Class<T> _clazz;
+	private String						_name;
+	protected LinkedHashMap<String, T>	_timeSeriesData;
+	private Class<T>					_clazz;
+
+	public static class TSType {
+		public static final TSType	HisSec	= new TSType( "HisSec" );
+		public static final TSType	HisDiv	= new TSType( "HisDiv" );
+
+		private final String		_type;
+
+		private TSType(String type) {
+			_type = type;
+		}
+
+		public String toString() {
+			return _type;
+		}
+	}
 
 	public TimeSeries(String name) {
 		_name = name;
@@ -23,7 +38,7 @@ public abstract class TimeSeries<T extends TimeUnit> implements Serializable {
 
 	public void addNode(String time) throws InstantiationException,
 			IllegalAccessException {
-		_timeSeriesData.put(time, _clazz.newInstance());
+		_timeSeriesData.put( time, _clazz.newInstance() );
 	}
 
 	public LinkedHashMap<String, T> getTSData() {

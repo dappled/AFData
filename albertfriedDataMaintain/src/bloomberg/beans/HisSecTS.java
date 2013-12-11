@@ -5,15 +5,15 @@ package bloomberg.beans;
  * security time series / historical data downloaded from bloomberg
  * @author Zhenghong Dong
  */
-public class SecTS extends TimeSeries<HistoricalSecurityTimeUnit>{
+public class HisSecTS extends TimeSeries<HistoricalSecurityTimeUnit>{
 	private static final long					serialVersionUID	= 4727075624731007020L;
 	
-	public SecTS(String name) {
+	public HisSecTS(String name) {
 		super(name);
 		setT(HistoricalSecurityTimeUnit.class);
 	}
 
-	public SecTS() {
+	public HisSecTS() {
 		super();
 		setT(HistoricalSecurityTimeUnit.class);
 	}

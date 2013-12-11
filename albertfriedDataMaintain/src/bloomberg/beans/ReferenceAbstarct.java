@@ -7,6 +7,13 @@ import java.io.Serializable;
  */
 @SuppressWarnings("serial")
 public abstract class ReferenceAbstarct implements Serializable{
+	public static class RefType {
+		private final String _type;
+		private RefType(String type) {
+			_type = type;
+		}
+		public String toString() {return _type; }
+	}
 	private String _symbol;
 	
 	public String getSymbol() {
