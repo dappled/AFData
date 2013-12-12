@@ -142,6 +142,12 @@ public class ParseDate {
 		if (date == null) return null;
 		else return standardFromyyyyBMMBdddd( date.toString() );
 	}
+	
+	public static String standardFromBbgDate(final String date) {
+		String[] dates = date.split("-");
+		return String.format("%s/%s/%s", dates[1], dates[2], dates[0]);
+		
+	}
 
 	/**
 	 * Convert standard date format MM/dd/yyyy to MMddyyyy, which will be used to find tradesummary file
@@ -329,5 +335,8 @@ public class ParseDate {
 		
 		String date2 = "1st September 2010";
 		System.out.println( standardFromStringMonthTypeTwo( date2 ) );
+		
+		String date3 = "2014-03-11";
+		System.out.println(standardFromBbgDate(date3));
 	}
 }

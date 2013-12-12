@@ -60,7 +60,7 @@ public class BbgNames {
 
 		public static final String	divHis				= "DVD_HIST";
 		public static final String	declaredDate		= "Declared Date";
-		public static final String	exDate				= "EX-Date";
+		public static final String	exDate				= "Ex-Date";
 		public static final String	recordDate			= "Record Date";
 		public static final String	payableDate			= "Payable Date";
 		public static final String	divAmount			= "Dividend Amount";
