@@ -1,29 +1,28 @@
 package bloomberg.beans;
 
-
-
 /**
  * @author Zhenghong Dong
  */
-public class HistoricalSecurityTimeUnit extends TimeUnit{
-	private static final long	serialVersionUID	= 1792434071620051534L;
-	private double	_last;
-	private double	_ask;
-	private double	_bid;
-	private double	_high;
-	private double	_open;
-	private double	_low;
-	private double	_close;
-	private double	_volume;
-	private double	_pe;
-	private long	_sharesOutstanding;
-	private double	_vwap;
-	private double	_currentQuartelyEEPS;
-	private double	_callIV;
-	private double	_putIV;
+public class HistoricalSecurityTimeUnit extends TimeUnit {
+	private static final long serialVersionUID = 1792434071620051534L;
+	private double _last;
+	private double _ask;
+	private double _bid;
+	private double _high;
+	private double _open;
+	private double _low;
+	private double _close;
+	private double _volume;
+	private double _pe;
+	private long _sharesOutstanding;
+	private double _vwap;
+	private double _currentQuartelyEEPS;
+	private double _callIV;
+	private double _putIV;
 
-	public HistoricalSecurityTimeUnit() {}
-	
+	public HistoricalSecurityTimeUnit() {
+	}
+
 	public double getLast() {
 		return _last;
 	}

@@ -129,4 +129,5 @@ public class HisSecTS extends TimeSeries<HistoricalSecurityTimeUnit>{
 	public void setPutIV(String date, double putIV) {
 		this._timeSeriesData.get( date ).setPutIV( putIV );
 	}
+
 }
