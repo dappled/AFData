@@ -88,7 +88,7 @@ public class ActivityValidator extends ValidatorBase {
 	/** parse a string list into an activity */
 	private BrokerActivity brokerGetActivity(final String[] list) throws Exception {
 		// tradeDate
-		final String tradeDate = ParseDate.standardFromyyyyMMdd( list[ 72 ].trim() ) ;
+		final String tradeDate = ParseDate.standardFromyyyyMMdd( list[ 72 ].trim() );
 		// symbol
 		String symbol;
 		String type = list[ 14 ].trim().toLowerCase();
@@ -127,15 +127,13 @@ public class ActivityValidator extends ValidatorBase {
 			final String namePart = st.nextToken();
 			final String datePart = st.nextToken() + " " + st.nextToken() + " " + st.nextToken();
 			final String[] lastPart = { st.nextToken(), st.nextToken() };
-			final double strike = Double.parseDouble( lastPart[0] );
+			final double strike = Double.parseDouble( lastPart[ 0 ] );
 			String ret = String.format( "%s %s %s", namePart, ParseDate.standardFromStringMonthTypeOne( datePart ),
 					lastPart[ 1 ] );
-			if (strike == (int) strike) 
-				return String.format( "%s %d", ret, (int)strike );
-			else 
-				return String.format( "%s %s", ret, strike );
+			if (strike == (int) strike) return String.format( "%s %d", ret, (int) strike );
+			else return String.format( "%s %s", ret, strike );
 		} catch (final Exception e) {
-			System.err.println( "TrdeValidator: Failed to parse option name " + data + ", will use empty string");
+			System.err.println( "TrdeValidator: Failed to parse option name " + data + ", will use empty string" );
 			e.printStackTrace();
 			return "";
 		}
@@ -164,8 +162,8 @@ public class ActivityValidator extends ValidatorBase {
 				final String symbol = list[ 2 ].trim();
 				final String description = list[ 6 ].trim();
 				String type = (symbol.split( " " ).length == 1) ? "equity" : "option";
-				type += (description.contains( "Exercise" ) || description.contains( "Assignment" )) ? ("," + description)
-						: "";
+				type += (description.contains( "Exercise" ) || description.contains( "Assignment" ) || description.contains( "SA" ) || description
+						.contains( "OA" )) ? ("," + description) : "";
 				final String side = list[ 3 ].trim();
 				final double price = Double.parseDouble( list[ 5 ].trim() );
 				final int qty = summaryGetQty( side, Integer.parseInt( list[ 4 ].trim() ) );
@@ -217,10 +215,9 @@ public class ActivityValidator extends ValidatorBase {
 		else throw new Exception( "TrdeValidator: Incorrect trade side in tradeSummary file" );
 	}
 
-
 	@Override
 	/** export to xls file */
-	protected void exportXls(final String outFileName, 
+	protected void exportXls(final String outFileName,
 			final List<RecordAbstract> summaryDiffList, final List<RecordAbstract> GSECDiffList,
 			final List<RecordAbstract> summaryOtherDay, final List<RecordAbstract> GSECOtherDay,
 			final List<RecordAbstract> summaryExtraList, final List<RecordAbstract> GSECExtraList,

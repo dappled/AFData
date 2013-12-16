@@ -5,12 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
  * @author Zhenghong Dong
  */
-public class BrokerTradeImporter extends ImporterBase{
+public class BrokerTradeImporter extends ImporterBase {
 	/***********************************************************************
 	 * Constructor
 	 ***********************************************************************/
@@ -20,15 +21,19 @@ public class BrokerTradeImporter extends ImporterBase{
 
 	@Override
 	protected void dumpHelper(String localFile, String dbName, String tradeDate) throws Exception {
-		PreparedStatement insertETB = null;
+		PreparedStatement insertBrokerTrade = null;
+		PreparedStatement searchBrokerTrade = null;
+		String searchString = "select * from "
+				+ dbName
+				+ " where TradeDate = ? and Symbol = ? and Maturity = ? and StrikePrice = ? and CallPut = ? and Side = ? and Quantity = ? and AvgPrice = ? and Broker = ?";
 		String insertString = "insert into " + dbName + " (Symbol,Maturity,StrikePrice,CallPut,Side, Quantity,AvgPrice,Broker) values (?,?,?,?,?,?,?,?)";
 
 		BufferedReader reader = null;
 		try {
 			// set up statement
 			_conn.setAutoCommit( false );
-			insertETB = _conn.prepareStatement( insertString );
-
+			insertBrokerTrade = _conn.prepareStatement( insertString );
+			searchBrokerTrade = _conn.prepareStatement( searchString );
 			// read file
 			reader = new BufferedReader( new FileReader( localFile ) );
 			reader.readLine(); // ignore header
@@ -42,26 +47,40 @@ public class BrokerTradeImporter extends ImporterBase{
 				System.out.println( "ETBImporter: " + localFile
 						+ " corrupted, at least two lines should be here (header and tailer)" );
 			}
-			int count = 0;
 			String[] list;
 			while ((nextLine = reader.readLine()) != null) {
-				list = line.split( "\\|" );
-				if (list.length != 2) throw new Exception(
-						"ETBImporter: " + localFile + " corrupted, inapproporate line: " + line );
+				list = line.split( " " );
+				if (list.length != 6) throw new Exception(
+						"BrokerTradeImporter: " + localFile + " corrupted, inapproporate line: " + line );
 				else {
-					// insert into database
-					insertETB.setString( 1, list[ 0 ].trim() );
-					insertETB.executeUpdate();
-					_conn.commit();
-					count++;
+					// test if exists
+					searchBrokerTrade.setString( 1, list[ 0 ].trim() );
+					searchBrokerTrade.setString( 2, list[ 1 ].trim() );
+					String sc = list[ 2 ].trim();
+					searchBrokerTrade.setFloat( 3, Float.parseFloat( sc.substring( 0, sc.length() ) ) );
+					searchBrokerTrade.setString( 4, sc.substring( sc.length() ).toUpperCase() );
+					searchBrokerTrade.setString( 5, Float.parseFloat( list[ 3 ].trim() ) > 0 ? "B" : "S" );
+					searchBrokerTrade.setFloat( 6, Float.parseFloat( list[ 3 ].trim() ) );
+					searchBrokerTrade.setFloat( 7, Float.parseFloat( list[ 5 ].trim() ) );
+					searchBrokerTrade.setString( 8, list[ 6 ].trim() );
+					ResultSet rs = searchBrokerTrade.executeQuery();
+					if (!rs.next()) {
+						// insert into database if doesn't exist
+						insertBrokerTrade.setString( 1, list[ 0 ].trim() );
+						insertBrokerTrade.setString( 2, list[ 1 ].trim() );
+						insertBrokerTrade.setFloat( 3, Float.parseFloat( sc.substring( 0, sc.length() ) ) );
+						insertBrokerTrade.setString( 4, sc.substring( sc.length() ).toUpperCase() );
+						insertBrokerTrade.setString( 5, Float.parseFloat( list[ 3 ].trim() ) > 0 ? "B" : "S" );
+						insertBrokerTrade.setFloat( 6, Float.parseFloat( list[ 3 ].trim() ) );
+						insertBrokerTrade.setFloat( 7, Float.parseFloat( list[ 5 ].trim() ) );
+						insertBrokerTrade.setString( 8, list[ 6 ].trim() );
+
+						insertBrokerTrade.executeUpdate();
+						_conn.commit();
+					}
 				}
 				line = nextLine;
 			}
-			// check trailer for file integration
-			if ((list = line.split( "\\|" )).length != 2) throw new Exception(
-					"ETBImporter: " + localFile + " corrupted, inapproporate line: " + line );
-			else if (count != Integer.parseInt( list[ 1 ] )) throw new Exception(
-					"ETBImporter: " + localFile + " corrupted, number of records read is not same as in the tailer" );
 		} catch (final FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (final IOException e) {
@@ -75,8 +94,8 @@ public class BrokerTradeImporter extends ImporterBase{
 				_conn.rollback();
 			}
 		} finally {
-			if (insertETB != null) {
-				insertETB.close();
+			if (insertBrokerTrade != null) {
+				insertBrokerTrade.close();
 			}
 			_conn.setAutoCommit( true );
 			reader.close();
