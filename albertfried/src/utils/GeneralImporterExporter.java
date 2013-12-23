@@ -66,7 +66,7 @@ public abstract class GeneralImporterExporter {
 				stmt.executeUpdate( query );
 				// System.out.println(re);
 			} catch (SQLException e) {
-				System.err.println( "Fail to wipe data from " + dbName + " for dates before "
+				System.err.println( "Fail to wipe data from " + dbName + " for dates on "
 						+ ParseDate.standardFromDate( cal.getTime() ) );
 			}
 		}

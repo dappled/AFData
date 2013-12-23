@@ -52,11 +52,11 @@ public class ImporterManager {
 					if (args[ ++i ].equals( "etb" )) {
 						_importer = new ETBImporter( _dbServer, _catalog );
 					}
-					// portfolio margin requirement summary
+					// portfolio requirement	
 					else if (args[ i ].equals( "pmsb" )) {
 						_importer = new PMRequirementImporter( _dbServer, _catalog );
 					}
-					// portfolio margin ineligible datafile layout
+					// portfolio detail
 					else if (args[ i ].equals( "pmdb" )) {
 						_importer = new PMDetailImporter( _dbServer, _catalog );
 					} 
