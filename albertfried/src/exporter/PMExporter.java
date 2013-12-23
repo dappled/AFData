@@ -117,9 +117,8 @@ public class PMExporter extends ExporterBase {
 	 * @throws Exception
 	 */
 	private List<PMAbstract> getDetail(String today) throws Exception {
-		// generate
 		// get all PM's detail report with whose symbol's requirement = risk on today
-		final String query = "SELECT t2.SymbolType,t1.ClassGroupId, t1.productgroupid, t1.Symbol, [Maturity],[putCall],[Strike],[Quantity],[Price] " +
+		final String query = "SELECT t2.SymbolType,t1.ClassGroupId, t1.productgroupid, t2.Symbol, t1.Symbol, [Maturity],[putCall],[Strike],[Quantity],[Price] " +
 				",Down5, Down4, Down3, Down2, Down1 " +
 				",up1, up2, up3, Up4, Up5, Requirement, Risk " +
 				"FROM " +
@@ -129,7 +128,7 @@ public class PMExporter extends ExporterBase {
 				"(select Symbol, SymbolType, Requirement, Risk " +
 				"from Clearing.dbo.PMRequirement " +
 				"where ImportedDate = CAST('" + today + "' as DATE)) as t2 " +
-				"on t2.Symbol = t1.ClassGroupId or t2.Symbol = t1.ProductGroupId or (t1.Symbol = 'spy' and t2.Symbol = 'usidx') " +
+				"on t2.Symbol = t1.ClassGroupId or t2.Symbol = t1.ProductGroupId or (t1.ProductGroupId not in ('00999','00006','00015','00068','00076','00081','00099','00522','00523') and t2.Symbol = 'usidx') " +
 				"order by Requirement desc";
 
 		try (Statement stmt = _conn.createStatement()) {
@@ -148,7 +147,7 @@ public class PMExporter extends ExporterBase {
 						id = rs.getString( 3 ).trim();
 						break;
 					case "O":
-						id = rs.getString( 4 ).trim(); // use SPY as id
+						id = rs.getString( 4 ).trim(); // use USIDX as id
 						break;
 					default:
 						throw new Exception("PMExporter: PM record symbol type should be on of C/P/O");
@@ -156,7 +155,8 @@ public class PMExporter extends ExporterBase {
 				int i = 4; // make life easier when add new fields
 				detail = new PMDailyDetail( today, // importedDate
 						id, // id
-						rs.getString( i++ ).trim(), // symbol
+						rs.getString( i++ ).trim(), // group symbol
+						rs.getString( i++ ).trim(), // ticker symbol
 						ParseDate.standardFromSQLDate( rs.getDate( i++ ) ), // maturity
 						rs.getString( i++ ).trim(), // putCall
 						rs.getFloat( i++ ), // strike

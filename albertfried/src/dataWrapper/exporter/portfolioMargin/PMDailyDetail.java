@@ -11,7 +11,7 @@ import dataWrapper.PMAbstract;
  * @author Zhenghong Dong
  */
 public class PMDailyDetail extends PMAbstract {
-	private final String	_id, _maturity, _putCall;
+	private final String	_id, _ticker, _maturity, _putCall;
 	private final float		_strike, _quantity, _price;
 	private final float[]	_movements	= new float[ 10 ];
 
@@ -20,10 +20,11 @@ public class PMDailyDetail extends PMAbstract {
 	 * @param symbol
 	 * @param requirement
 	 */
-	public PMDailyDetail(String date, String id, String symbol, String mat, String putCall, float strike, float qty, float price, float down5, float down4, float down3,
+	public PMDailyDetail(String date, String id, String symbol, String ticker, String mat, String putCall, float strike, float qty, float price, float down5, float down4, float down3,
 			float down2, float down1, float up1, float up2, float up3, float up4, float up5) {
 		super( date, symbol );
 		_id = id;
+		_ticker = ticker;
 		_maturity = mat;
 		_putCall = putCall;
 		_strike = strike;
@@ -46,7 +47,7 @@ public class PMDailyDetail extends PMAbstract {
 	public void writeNextForMultipleRecords(Workbook wb, Row row, int index) {
 		int i = index;
 		final CreationHelper createHelper = wb.getCreationHelper();
-		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getSymbol() ) );
+		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getTicker() ) );
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getMaurity() ) );
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getPutCall() ) );
 		row.createCell( i++ ).setCellValue( getStrike() );
@@ -81,7 +82,7 @@ public class PMDailyDetail extends PMAbstract {
 	protected void writeNextForAnalysis(Workbook wb, Row row, int index, int interestedIdx) {
 		int i = index;
 		final CreationHelper createHelper = wb.getCreationHelper();
-		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getSymbol() ) );
+		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getTicker() ) );
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getMaurity() ) );
 		row.createCell( i++ ).setCellValue( createHelper.createRichTextString( getPutCall() ) );
 		row.createCell( i++ ).setCellValue( getStrike() );
@@ -120,5 +121,9 @@ public class PMDailyDetail extends PMAbstract {
 	
 	public String getId() {
 		return _id;
+	}
+
+	public String getTicker() {
+		return _ticker;
 	}
 }
