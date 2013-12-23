@@ -16,6 +16,7 @@ public class ValidatorManager {
 	private static String			_dbServer;
 	private static String			_catalog;
 	private static boolean			_wipe			= false;
+	private static boolean 			_test 			= false;
 
 	public static void main(final String[] args) throws Exception {
 		ValidatorManager.parseArgs( args );
@@ -37,6 +38,9 @@ public class ValidatorManager {
 	private static void parseArgs(final String[] args) throws Exception {
 		for (int i = 0; i < args.length; i++) {
 			switch (args[ i ]) {
+				case "/test":
+					_test = true;
+					break;
 				case "/mail":
 					ValidatorManager._addressList = args[ ++i ];
 					break;
@@ -77,7 +81,8 @@ public class ValidatorManager {
 						ValidatorManager._mailSubject = "ActivityMismatchReport";
 					}
 					else if (args[ i ].equals( "position" )) {
-						_date = ParseDate.today;
+						if (_test) _date = ParseDate.testToday;
+						else _date = ParseDate.today;
 						ValidatorManager._validator = new PositionValidator( _dbServer, _catalog );
 						ValidatorManager._mailSubject = "PostitionMismatchReport";
 					} else throw new Exception( "ValidatorManager: /type argument inapproporiate" );

@@ -33,10 +33,10 @@
   		<version>3.9</version>
   	</dependency>
   	<dependency>
-        	<groupId>org.apache.poi</groupId>
-        	<artifactId>poi-ooxml</artifactId>
-        	<version>3.9</version>
-    	</dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>3.9</version>
+    </dependency>
   	<dependency>
   		<groupId>joda-time</groupId>
   		<artifactId>joda-time</artifactId>

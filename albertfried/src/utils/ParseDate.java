@@ -17,10 +17,8 @@ public class ParseDate {
 	// last working day
 	public static String	yesterday	= getPreviousWorkingDay( standardFromDate( new Date() ) );
 	// today should be the next day of yesterday.. this is for test only, if we want to run some test on Monday for last
-	// friday's report, which should be
-	// generated last Saturday, today is then last Saturday which is one day after yesterday but not real today.
-	// However, we won't never generate report
-	// on Monday morning, they should be generated last Saturday.
+	// friday's report, which should be generated last Saturday, today is then last Saturday which is one day after yesterday but not real today.
+	// However, we won't never generate report on Monday morning, they should be generated last Saturday.
 	public static String	testToday	= getNextWorkingDay( yesterday );
 	// today's date, usually used as importDate in database
 	public static String	today		= standardFromDate( new Date() );

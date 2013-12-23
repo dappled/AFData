@@ -44,8 +44,8 @@ public class BrokerTradeImporter extends ImporterBase {
 			try {
 				line = reader.readLine();
 			} catch (final ArrayIndexOutOfBoundsException e) {
-				System.out.println( "ETBImporter: " + localFile
-						+ " corrupted, at least two lines should be here (header and tailer)" );
+				System.out.println( "BrokerTradeImporter: " + localFile
+						+ " corrupted" );
 			}
 			String[] list;
 			while ((nextLine = reader.readLine()) != null) {
@@ -74,9 +74,12 @@ public class BrokerTradeImporter extends ImporterBase {
 						insertBrokerTrade.setFloat( 6, Float.parseFloat( list[ 3 ].trim() ) );
 						insertBrokerTrade.setFloat( 7, Float.parseFloat( list[ 5 ].trim() ) );
 						insertBrokerTrade.setString( 8, list[ 6 ].trim() );
-
+						
+						
 						insertBrokerTrade.executeUpdate();
 						_conn.commit();
+						
+						
 					}
 				}
 				line = nextLine;
