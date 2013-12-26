@@ -60,7 +60,7 @@ public class PMExporter extends ExporterBase {
 				"where importedDate = cast('" + today + "' as Date)) as today " +
 				"full outer join " +
 				"(select Symbol, Requirement from [Clearing].[dbo].[PMRequirement] " +
-				"where importedDate = (select MAX(importedDate) from Clearing.dbo.PMRequirement where importedDate < CAST('" + today + "' as DATE))) as yesterday " +
+				"where importedDate = Trading.dbo.GetPrevTradeDate(1)) as yesterday " +
 				"on today.Symbol = yesterday.Symbol)) as tmp " +
 				"where tmp.Change <> 0 " +
 				"order by Change desc";
