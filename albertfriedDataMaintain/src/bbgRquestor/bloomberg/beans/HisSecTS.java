@@ -1,21 +1,20 @@
 package bbgRquestor.bloomberg.beans;
 
-
 /**
  * security time series / historical data downloaded from bloomberg
  * @author Zhenghong Dong
  */
-public class HisSecTS extends TimeSeries<HistoricalSecurityTimeUnit>{
-	private static final long					serialVersionUID	= 4727075624731007020L;
-	
+public class HisSecTS extends TimeSeries<SecurityTimeUnit> {
+	private static final long	serialVersionUID	= 4727075624731007020L;
+
 	public HisSecTS(String name) {
-		super(name);
-		setT(HistoricalSecurityTimeUnit.class);
+		super( name );
+		setT( SecurityTimeUnit.class );
 	}
 
 	public HisSecTS() {
 		super();
-		setT(HistoricalSecurityTimeUnit.class);
+		setT( SecurityTimeUnit.class );
 	}
 
 	public double getLast(String date) {
@@ -110,8 +109,8 @@ public class HisSecTS extends TimeSeries<HistoricalSecurityTimeUnit>{
 		return _timeSeriesData.get( date ).getCurrentQuartelyEEPS();
 	}
 
-	public void setCurrentQuarterEEPS(String date, double currentQuartelyEEPS) {
-		this._timeSeriesData.get( date ).setCurrentQuartelyEEPS( currentQuartelyEEPS );
+	public void setCurrentQuarterlyEEPS(String date, double currentQuartelyEEPS) {
+		this._timeSeriesData.get( date ).setCurrentQuarterlyEEPS( currentQuartelyEEPS );
 	}
 
 	public double getCallIV(String date) {
@@ -130,4 +129,9 @@ public class HisSecTS extends TimeSeries<HistoricalSecurityTimeUnit>{
 		this._timeSeriesData.get( date ).setPutIV( putIV );
 	}
 
+	@Override
+	public void printPiece(String date){
+		System.out.println( "Date: " + date );
+		_timeSeriesData.get( date ).printPiece();
+	}
 }

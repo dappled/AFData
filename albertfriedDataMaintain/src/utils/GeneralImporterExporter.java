@@ -30,6 +30,7 @@ public abstract class GeneralImporterExporter {
 
 	public GeneralImporterExporter() {
 		_conn = null;
+
 	}
 
 	public GeneralImporterExporter(String dbServer, String catalog) {
@@ -43,7 +44,7 @@ public abstract class GeneralImporterExporter {
 		}
 	}
 
-	public void close() throws SQLException {
+	public void close() throws Exception {
 		if (_conn != null) _conn.close();
 	}
 
@@ -51,14 +52,16 @@ public abstract class GeneralImporterExporter {
 	 * Wipe every data who is older than 7 days
 	 * @param dbName
 	 */
-	public void wipeData(final String dbName) {
+	public void wipeData(final String dbName, final int wipe) {
 		Calendar cal = Calendar.getInstance();
 		String query;
-		// wipe today's previous import if exists (so we won't import twice for today)
-		if (!dbName.equals( "[Clearing].[dbo].[GSECPositions]" )) {
+		// wipe today's previous import if exists (so we won't import twice for today) //not really work here b/c column
+		// not called imported date...However i don't want it to work b/c the table is updated by other programs, this
+		// wipe might wipe others imports
+		if (wipe == 1) {
 			cal.setTime( new Date() );
 			query = "delete"
-					+ " from " + dbName + " where [ImportedDate]=cast('" + DateUtils.standardFromDate( cal.getTime() )
+					+ " from " + dbName + " where [ImportedDate]=cast('" + ParseDate.standardFromDate( cal.getTime() )
 					+ "' AS DATE)";
 
 			try (Statement stmt = _conn.createStatement()) {
@@ -66,22 +69,24 @@ public abstract class GeneralImporterExporter {
 				stmt.executeUpdate( query );
 				// System.out.println(re);
 			} catch (SQLException e) {
-				System.err.println( "Fail to wipe data from " + dbName + " for dates before "
-						+ DateUtils.standardFromDate( cal.getTime() ) );
+				System.err.println( "Fail to wipe data from " + dbName + " for dates on "
+						+ ParseDate.standardFromDate( cal.getTime() ) );
 			}
 		}
 
 		// wipe data one week older
-		cal.add( Calendar.DAY_OF_MONTH, -7 );
-		query = "delete"
-				+ " from " + dbName + " where [ImportedDate]<=cast('" + DateUtils.standardFromDate( cal.getTime() )
-				+ "' AS DATE)";
-		try (Statement stmt = _conn.createStatement()) {
-			stmt.executeUpdate( query );
-			// System.out.println(re);
-		} catch (SQLException e) {
-			System.err.println( "Fail to wipe data from " + dbName + " for dates before "
-					+ DateUtils.standardFromDate( cal.getTime() ) );
+		if (wipe == 2) {
+			cal.add( Calendar.DAY_OF_MONTH, -7 );
+			query = "delete"
+					+ " from " + dbName + " where [ImportedDate]<=cast('" + ParseDate.standardFromDate( cal.getTime() )
+					+ "' AS DATE)";
+			try (Statement stmt = _conn.createStatement()) {
+				stmt.executeUpdate( query );
+				// System.out.println(re);
+			} catch (SQLException e) {
+				System.err.println( "Fail to wipe data from " + dbName + " for dates before "
+						+ ParseDate.standardFromDate( cal.getTime() ) );
+			}
 		}
 	}
 

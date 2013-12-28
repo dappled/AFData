@@ -339,6 +339,13 @@ public class DateUtils {
 
 	}
 
+	@SuppressWarnings("deprecation")
+	public static int compare(String date1, String date2) {
+		Date d1 = new Date( date1 );
+		Date d2 = new Date( date2 );
+		return d1.compareTo( d2 );
+	}
+
 	public static void main(String[] args) {
 		long date = 19890515;
 		System.out.println( standardFromLong( date ) );
@@ -358,6 +365,9 @@ public class DateUtils {
 		Days p = Days.daysBetween( LocalDate.now(), DateUtils.GetExpDayFromDate( new LocalDate( 2014, 12, 1 ) ) );
 		System.out.println( p.getDays() );
 		
-
+		String date4 = "01/01/2011";
+		String date5 = standardFromyyyyMMdd( "20030102" );
+		System.out.println(compare( date4, date5 ));
+		
 	}
 }

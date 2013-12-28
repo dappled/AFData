@@ -10,10 +10,12 @@ import utils.DateUtils;
 import bbgRequestor.bloomberg.BbgNames.Fields;
 import bbgRquestor.bloomberg.beans.HisDivTS;
 import bbgRquestor.bloomberg.beans.HisSecTS;
+import bbgRquestor.bloomberg.beans.SecurityTimeUnit;
 import bbgRquestor.bloomberg.beans.SecurityLookUpResult;
 import bbgRquestor.bloomberg.beans.TimeSeries;
 import bbgRquestor.bloomberg.beans.TimeSeries.TSType;
 import bbgRquestor.bloomberg.beans.TimeUnit;
+import bbgRquestor.bloomberg.blpapi.examples.RefDataExample;
 import bbgRquestor.bloomberg.blpapi.examples.SecurityLookupExample;
 
 import com.bloomberglp.blpapi.Element;
@@ -53,6 +55,7 @@ public class BbgDataGrabber {
 			System.err.println( "Failed to open //blp/refdata" );
 			_session = null;
 		}
+		System.out.println("Connected");
 	}
 
 	public void stop() throws InterruptedException {
@@ -62,19 +65,27 @@ public class BbgDataGrabber {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public HashMap<String, ? extends TimeSeries> getData(String t, List<String> name, List<String> fields, HashMap<String, Object> properties)
+	public HashMap<String, ? extends TimeSeries> getTSData(String t, List<String> name, List<String> fields, HashMap<String, Object> properties)
 			throws Exception {
 		Service refDataService = _session.getService( "//blp/refdata" );
 		Request request;
 		TSType type;
+		Element field;
 		switch (t) {
-			case "HisDiv":
+			case "div":
 				type = TSType.HisDiv;
 				request = refDataService.createRequest( "ReferenceDataRequest" );
+				field = request.getElement( "fields" );
+				field.appendValue( Fields.dvdHis );
 				break;
-			case "HisSec":
+			case "sec":
 				type = TSType.HisSec;
 				request = refDataService.createRequest( "HistoricalDataRequest" );
+				field = request.getElement( "fields" );
+				for (String f : fields) {
+					field.appendValue( f );
+				}
+				setRequestProperties( request, properties );
 				break;
 			default:
 				throw new Exception( "Type support now is historical dividend and historical security" );
@@ -84,32 +95,13 @@ public class BbgDataGrabber {
 
 		for (String security : name) {
 			securities.appendValue( security );
-
 		}
-
-		Element field = request.getElement( "fields" );
-
-		for (String f : fields) {
-			field.appendValue( f );
-
-		}
-
-		setRequestProperties( request, properties );
 
 		System.out.println( "Sending Request: " + request );
 		_session.sendRequest( request, null );
 
 		// wait for events from session.
-		if (type == TSType.HisDiv) {
-			HashMap<String, HisDivTS> tmp = new HashMap<>();
-			eventLoop( _session, tmp, type );
-			return tmp;
-		} else if (type == TSType.HisSec) {
-			HashMap<String, HisSecTS> tmp = new HashMap<>();
-			eventLoop( _session, tmp, type );
-			return tmp;
-		}
-		return null;
+		return eventLoop( _session, type, fields, properties );
 	}
 
 	/**
@@ -133,16 +125,18 @@ public class BbgDataGrabber {
 		}
 	}
 
-	private void eventLoop(Session session, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, TSType type) throws Exception {
+	private HashMap<String, ? extends TimeSeries<? extends TimeUnit>> eventLoop(Session session, TSType type, List<String> fields,
+			HashMap<String, Object> properties) throws Exception {
 		boolean done = false;
+		HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map = new HashMap<>();
 		while (!done) {
 			Event event = session.nextEvent();
 			if (event.eventType() == Event.EventType.PARTIAL_RESPONSE) {
 				System.out.println( "Processing Partial Response" );
-				processResponseEvent( event, map, type );
+				processResponseEvent( event, map, type, fields, properties );
 			} else if (event.eventType() == Event.EventType.RESPONSE) {
 				System.out.println( "Processing Response" );
-				processResponseEvent( event, map, type );
+				processResponseEvent( event, map, type, fields, properties );
 				done = true;
 			} else {
 				MessageIterator msgIter = event.messageIterator();
@@ -156,12 +150,13 @@ public class BbgDataGrabber {
 				}
 			}
 		}
+		return map;
 	}
 
-	// ignore below comment by bbg, they said this and make the function return
-	// void...
+	// ignore below comment by bbg, they said return true if blah blah blah and return void...
 	// return true if (processing is completed, false otherwise
-	private void processResponseEvent(Event event, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, TSType type) throws Exception {
+	private void processResponseEvent(Event event, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, TSType type, List<String> fields,
+			HashMap<String, Object> properties) throws Exception {
 		MessageIterator msgIter = event.messageIterator();
 		while (msgIter.hasNext()) {
 			Message msg = msgIter.next();
@@ -175,16 +170,17 @@ public class BbgDataGrabber {
 			if (type != TSType.HisSec) {
 				for (int i = 0; i < security.numValues(); i++) {
 					extractSingleSecurityValue( security.getValueAsElement( i ),
-							map, type );
+							map, type, fields, properties );
 				}
 			} else {
-				extractSingleSecurityValue( security, map, type );
+				extractSingleSecurityValue( security, map, type, fields, properties );
 			}
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private void extractSingleSecurityValue(Element security, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, TSType type) throws Exception {
+	private void extractSingleSecurityValue(Element security, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, TSType type, List<String> fields,
+			HashMap<String, Object> properties) throws Exception {
 		String ticker = security.getElementAsString( BbgNames.SECURITY );
 		if (security.hasElement( "securityError" )) {
 			printErrorInfo( "\tSECURITY FAILED: ", security.getElement( BbgNames.SECURITY_ERROR ) );
@@ -192,7 +188,7 @@ public class BbgDataGrabber {
 		}
 
 		if (type == TSType.HisDiv) {
-			readHisDiv( security, (HashMap<String, HisDivTS>) map, ticker );
+			readHisDiv( security, (HashMap<String, HisDivTS>) map, ticker, fields, properties );
 		} else if (type == TSType.HisSec) {
 			readHistSec( security, (HashMap<String, HisSecTS>) map, ticker );
 		} else {
@@ -219,68 +215,85 @@ public class BbgDataGrabber {
 
 					String date = DateUtils.standardFromBbgDate( fieldData.getElementAsDate( BbgNames.DATE ).toString() );
 					tmp.addNode( date );
-					if (fieldData.hasElement( Fields.open )) tmp.setOpen( date,	fieldData.getElementAsFloat64( Fields.open ) );
+					if (fieldData.hasElement( Fields.open )) tmp.setOpen( date, fieldData.getElementAsFloat64( Fields.open ) );
 					if (fieldData.hasElement( Fields.close )) tmp.setClose( date, fieldData.getElementAsFloat64( Fields.close ) );
 					if (fieldData.hasElement( Fields.high )) tmp.setHigh( date, fieldData.getElementAsFloat64( Fields.high ) );
 					if (fieldData.hasElement( Fields.low )) tmp.setLow( date, fieldData.getElementAsFloat64( Fields.low ) );
 					if (fieldData.hasElement( Fields.last )) tmp.setLast( date, fieldData.getElementAsFloat64( Fields.last ) );
 					if (fieldData.hasElement( Fields.volume )) tmp.setVolume( date, fieldData.getElementAsFloat64( Fields.volume ) );
 					if (fieldData.hasElement( Fields.pe )) tmp.setPE( date, fieldData.getElementAsFloat64( Fields.pe ) );
-					if (fieldData.hasElement( Fields.sharesOutstanding )) tmp.setSharesOutstanding(date,fieldData.getElementAsInt64( Fields.sharesOutstanding ) );
-					if (fieldData.hasElement( Fields.vwap )) tmp.setVwap( date,	fieldData.getElementAsFloat64( Fields.vwap ) );
-					if (fieldData.hasElement( Fields.currentQuarterEEPS )) tmp.setCurrentQuarterEEPS(date,fieldData.getElementAsFloat64( Fields.currentQuarterEEPS ) );
+					if (fieldData.hasElement( Fields.sharesOutstanding )) tmp.setSharesOutstanding( date,
+							fieldData.getElementAsInt64( Fields.sharesOutstanding ) );
+					if (fieldData.hasElement( Fields.vwap )) tmp.setVwap( date, fieldData.getElementAsFloat64( Fields.vwap ) );
+					if (fieldData.hasElement( Fields.currentQuarterEEPS )) tmp.setCurrentQuarterlyEEPS( date,
+							fieldData.getElementAsFloat64( Fields.currentQuarterEEPS ) );
 					if (fieldData.hasElement( Fields.callIV )) tmp.setCallIV( date, fieldData.getElementAsFloat64( Fields.callIV ) );
-					if (fieldData.hasElement( Fields.putIV )) tmp.setPutIV( date,fieldData.getElementAsFloat64( Fields.putIV ) );
+					if (fieldData.hasElement( Fields.putIV )) tmp.setPutIV( date, fieldData.getElementAsFloat64( Fields.putIV ) );
 				}
 			}
 		}
 		map.put( ticker, tmp );
 	}
 
+	/** current filter using fields and properties, for properties now only support filter out day period(start/end) */
 	private void readHisDiv(Element security, Map<String, HisDivTS> map,
-			String ticker) throws InstantiationException,
+			String ticker, List<String> fields, HashMap<String, Object> properties) throws InstantiationException,
 			IllegalAccessException {
 		HisDivTS tmp = new HisDivTS( ticker );
 		if (security.hasElement( BbgNames.FIELD_DATA )) {
-			Element fields = security.getElement( BbgNames.FIELD_DATA )
-					.getElement( Fields.divHis );
-			if (fields.numValues() > 0) {
-				for (int j = 0; j < fields.numValues(); ++j) {
-					Element fieldData = fields.getValueAsElement( j );
-					String date = DateUtils.standardFromBbgDate( fieldData
-							.getElementAsDate( Fields.declaredDate )
-							.toString() );
+			Element fieldss = security.getElement( BbgNames.FIELD_DATA )
+					.getElement( Fields.dvdHis );
+			if (fieldss.numValues() > 0) {
+				for (int j = 0; j < fieldss.numValues(); ++j) {
+					Element fieldData = fieldss.getValueAsElement( j );
+					String date = DateUtils.standardFromBbgDate( fieldData.getElementAsDate( Fields.declaredDate ).toString() );
+					/* filter out day period (start/end) */
+					if (properties.containsKey( "start" )) {
+						if (DateUtils.compare( date, DateUtils.standardFromyyyyMMdd((String) properties.get( "start" )) ) < 0) continue;
+					}
+					if (properties.containsKey( "end" )) {
+						if (DateUtils.compare( DateUtils.standardFromyyyyMMdd((String) properties.get( "end" )), date ) < 0) continue;
+					}
 					tmp.setDeclareDate( date );
 
-					if (fieldData.hasElement( Fields.exDate )) tmp.setExDate( date,
-							fieldData.getElementAsString( Fields.exDate ) );
-					if (fieldData.hasElement( Fields.recordDate )) tmp.setRecordDate( date, fieldData
-							.getElementAsString( Fields.recordDate ) );
-					if (fieldData.hasElement( Fields.payableDate )) tmp.setPayableDate( date, fieldData
-							.getElementAsString( Fields.payableDate ) );
-					if (fieldData.hasElement( Fields.divAmount )) tmp.setAmount( date, fieldData
-							.getElementAsFloat64( Fields.divAmount ) );
-					if (fieldData.hasElement( Fields.divFreq )) tmp.setFrequency( date, fieldData
-							.getElementAsString( Fields.divFreq ) );
-					if (fieldData.hasElement( Fields.divType )) tmp.setType( date, fieldData
-							.getElementAsString( Fields.divType ) );
+					/* filter out properties */
+					if (fields.contains( "EXDATE" ) && fieldData.hasElement( Fields.exDate )) tmp
+							.setExDate( date, fieldData.getElementAsString( Fields.exDate ) );
+					if (fields.contains( "RECORDDATE" ) && fieldData.hasElement( Fields.recordDate )) tmp.setRecordDate( date,
+							fieldData.getElementAsString( Fields.recordDate ) );
+					if (fields.contains( "PAYABLEDATE" ) && fieldData.hasElement( Fields.payableDate )) tmp.setPayableDate( date,
+							fieldData.getElementAsString( Fields.payableDate ) );
+					if (fields.contains( "DIVAMOUNT" ) && fieldData.hasElement( Fields.divAmount )) tmp.setAmount( date,
+							fieldData.getElementAsFloat64( Fields.divAmount ) );
+					if (fields.contains( "DIVFREQ" ) && fieldData.hasElement( Fields.divFreq )) tmp.setFrequency( date,
+							fieldData.getElementAsString( Fields.divFreq ) );
+					if (fields.contains( "DIVTYPE" ) && fieldData.hasElement( Fields.divType )) tmp.setType( date,
+							fieldData.getElementAsString( Fields.divType ) );
 				}
 			}
 		}
 		map.put( ticker, tmp );
 	}
 	
-	public List<List<SecurityLookUpResult>> securityLookUp(List<String> args) {
-		return (new SecurityLookupExample().run( args.toArray( new String[args.size()] ) ));
-	}
-
 	private void printErrorInfo(String leadingStr, Element errorInfo)
 			throws Exception {
 		System.out.println( leadingStr
 				+ errorInfo.getElementAsString( BbgNames.CATEGORY ) + " ("
 				+ errorInfo.getElementAsString( BbgNames.MESSAGE ) + ")" );
 	}
-
+	
+	/** lookup information */
+	public List<SecurityLookUpResult> securityLookUp(List<String> args) throws Exception {
+		return (new SecurityLookupExample().run( _session, args.toArray( new String[ args.size() ] ) ));
+	}
+	
+	/** get reference data */
+	public List<SecurityTimeUnit> getRefData(List<String> names, List<String> fields) throws Exception {
+		return (new RefDataExample().run( _session, names, fields ));
+	}
+	
+	public void testRefData() {}
+	
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws Exception {
 		BbgDataGrabber grabber = new BbgDataGrabber();
@@ -294,7 +307,7 @@ public class BbgDataGrabber {
 
 		List<String> name = Arrays.asList( "MSFT US EQUITY", "GS US EQUITY" );
 		List<String> fields = Arrays.asList( Fields.last, Fields.open );
-		HashMap<String, HisSecTS> res = (HashMap<String, HisSecTS>) grabber.getData("HisSec", name, fields, properties );
+		HashMap<String, HisSecTS> res = (HashMap<String, HisSecTS>) grabber.getTSData( "HisSec", name, fields, properties );
 
 		for (String n : name) {
 			HisSecTS ts = res.get( n );
@@ -303,8 +316,8 @@ public class BbgDataGrabber {
 				System.out.println( d + "(open):" + ts.getOpen( d ) );
 			}
 		}
-		
-		HashMap<String, HisDivTS> res2 = (HashMap<String, HisDivTS>) grabber.getData( "HisDiv", name, Arrays.asList( Fields.divHis ), null );
+
+		HashMap<String, HisDivTS> res2 = (HashMap<String, HisDivTS>) grabber.getTSData( "HisDiv", name, Arrays.asList( Fields.dvdHis ), null );
 
 		for (String n : name) {
 			HisDivTS ts = res2.get( n );
@@ -314,14 +327,11 @@ public class BbgDataGrabber {
 			}
 		}
 
-		String[] arrgs = {"-r","instrumentListRequest", "-s", "treasury" };
-		List<List<SecurityLookUpResult>> res3 = grabber.securityLookUp( Arrays.asList( arrgs ) );
-		
-		for (List<SecurityLookUpResult> re : res3) {
-			for (SecurityLookUpResult rre : re) {
-				System.out.println(rre.getType());
-				System.out.println(rre.getElement());
-			}
+		String[] arrgs = { "-r", "instrumentListRequest", "-s", "treasury" };
+		List<SecurityLookUpResult> res3 = grabber.securityLookUp( Arrays.asList( arrgs ) );
+
+		for (SecurityLookUpResult re : res3) {
+			re.printPiece();
 		}
 		grabber.stop();
 		System.out.printf( "END" );

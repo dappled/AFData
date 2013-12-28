@@ -63,4 +63,26 @@ public class SecurityLookUpResult implements Serializable {
 		this._curveExtra = curveExtra;
 	}
 
+
+	public void printPiece() {
+		System.out.println("Type: " + getType());
+		switch (_type) {
+			case "Security":
+				System.out.println("Security: " + getElement());
+				System.out.println("Description: " + getDescription());
+				break;
+			case "Curve":
+				System.out.println("Curve: " + getElement());
+				System.out.println("Description: " + getDescription());
+				System.out.println("Curve_Response_Elements: " + getCurveExtra());
+				break;
+			case "Govt":
+				System.out.println("Parseky: " + getElement());
+				System.out.println("Name: " + getNameElement());
+				System.out.println("Ticker: " + getTickerElement());
+				break;
+			default:
+				break;
+		}
+	}
 }

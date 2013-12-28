@@ -32,7 +32,7 @@ public class YieldCurve extends GeneralImporterExporter {
 		List<Double> tenor = new ArrayList<>();
 		List<Double> yield = new ArrayList<>();
 
-		final String query = "select [tradedate], [symbol], [tenor], [close] from securitiesMaster.dbo.activeyieldcurve_current where symbol like 'U%'";
+		final String query = "select [tradedate], [symbol], [tenor], [close] from securitiesMaster.dbo.activeyieldcurve_current where symbol like 'USSO%' or symbol in ('USSWAP7','USSWAP10','USSWAP12','USSWAP15','USSWAP20','USSWAP25','USSWAP30','USSWAP40','USSWAP50')";
 
 		try (Statement stmt = _conn.createStatement()) {
 
@@ -97,8 +97,9 @@ public class YieldCurve extends GeneralImporterExporter {
 
 	public static void main(final String[] args) throws Exception {
 		YieldCurve yc = new YieldCurve();
-		System.out.println( yc.yield( 2015, 12 ) );
+		System.out.println( yc.yield( 2015, 06 ) );
+		yc.close();
 		System.out.println( "End" );
+		
 	}
-
 }

@@ -8,7 +8,15 @@ import java.io.Serializable;
 @SuppressWarnings("serial")
 public abstract class TimeUnit implements Serializable {
 	private String	_time;
+	private String _name;
+	
+	public TimeUnit(String name) {
+		_name = name;
+	}
 
+	public String getName() {
+		return _name;
+	}
 	public String getTime() {
 		return _time;
 	}
@@ -16,4 +24,6 @@ public abstract class TimeUnit implements Serializable {
 	public void setTime(String time) {
 		_time = time;
 	}
+
+	public abstract void printPiece();
 }

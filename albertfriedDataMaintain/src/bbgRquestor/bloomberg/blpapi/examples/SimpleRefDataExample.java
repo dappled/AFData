@@ -75,13 +75,14 @@ public class SimpleRefDataExample {
 
         // append securities to request
         Element securities = request.getElement("securities");
-        securities.appendValue("IBM US Equity");
-        securities.appendValue("/cusip/912828GM6@BGN");
+        securities.appendValue("USSO2Z Curncy");
+        securities.appendValue("USSO3Z Curncy");
 
         // append fields to request
         Element fields = request.getElement("fields");
         fields.appendValue("PX_LAST");
-        fields.appendValue("DS002");
+        
+        
 
         System.out.println("Sending Request: " + request);
         d_cid = session.sendRequest(request, null);

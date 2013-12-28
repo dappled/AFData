@@ -1,5 +1,6 @@
 package utils;
 
+
 /**
  * @author Zhenghong Dong
  */
@@ -21,7 +22,35 @@ public class StringUtils {
 		return -1;
 	}
 	
+	public static String[] arrayToUpper(String[] l) {
+		for (int i = 0; i < l.length; i++) {
+			l[i] = l[i].toUpperCase();
+		}
+		return l;
+	}
+	
+	public static String[] arrayTrimQuotes(String[] l) {
+		for (int i = 0; i < l.length; i++) {
+			l[i] = l[i].replaceAll("^\"|\"$", "");
+		}
+		return l;
+	}
+	
+	public static String[] arrayTrim(String[] l) {
+		for (int i = 0; i < l.length; i++) {
+			l[i] = l[i].trim();
+		}
+		return l;
+	}
+	
+	public static String[] splitWIthQuotes(String l) {
+		return l.split( "[ ]+(?=([^\"]*\"[^\"]*\")*[^\"]*$)" );
+	}
+	
 	public static void main(String[] args) {
 		System.out.println(StringUtils.numberToStringWithoutZeros( 33.4 ));
+		String[] a = {"\"aaa\"", "bbb", "ccc" };
+		System.out.println(arrayToUpper( a )[0]);
+		System.out.println(arrayTrimQuotes( a )[0]);
 	}
 }

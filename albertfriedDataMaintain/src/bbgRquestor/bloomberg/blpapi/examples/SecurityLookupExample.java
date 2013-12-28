@@ -20,6 +20,11 @@
  */
 package bbgRquestor.bloomberg.blpapi.examples;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+
 import bbgRquestor.bloomberg.beans.SecurityLookUpResult;
 
 import com.bloomberglp.blpapi.CorrelationID;
@@ -35,12 +40,6 @@ import com.bloomberglp.blpapi.NotFoundException;
 import com.bloomberglp.blpapi.Request;
 import com.bloomberglp.blpapi.Service;
 import com.bloomberglp.blpapi.Session;
-import com.bloomberglp.blpapi.SessionOptions;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map.Entry;
 
 public class SecurityLookupExample
 {
@@ -79,10 +78,8 @@ public class SecurityLookupExample
 	private static final String		AUTH_OPTION_DIR				= "dir=";
 	private static final String		INSTRUMENT_SERVICE			= "//blp/instruments";
 	private static final String		AUTH_SERVICE				= "//blp/apiauth";
-	private static final String		DEFAULT_HOST				= "localhost";
-	private static final int		DEFAULT_PORT				= 8194;
 	private static final String		DEFAULT_QUERY_STRING		= "IBM";
-	private static final int		DEFAULT_MAX_RESULTS			= 10;
+	private static final int		DEFAULT_MAX_RESULTS			= 25;
 	private static final int		WAIT_TIME_MS				= 10 * 1000;																		// 10
 																																					// seconds
 
@@ -121,42 +118,28 @@ public class SecurityLookupExample
 	private static final Name		TICKER_ELEMENT				= Name.getName( "ticker" );
 
 	private String					d_queryString				= DEFAULT_QUERY_STRING;
-	private String					d_host						= DEFAULT_HOST;
 	private Name					d_requestType				= INSTRUMENT_LIST_REQUEST;
-	private int						d_port						= DEFAULT_PORT;
 	private int						d_maxResults				= DEFAULT_MAX_RESULTS;
 	private String					d_authOptions				= null;
 	private HashMap<String, String>	d_filters					= new HashMap<String, String>();
 
-	private void printUsage() {
-		System.out.println( "Usage:" );
-		System.out.println( " Instruments Lookup service Example." );
-		System.out.println( "\t\t[-r \t<requestType> = instrumentListRequest]" +
-				"\trequestType: instrumentListRequest|curveListRequest|govtListRequest" );
-		System.out.println( "\t\t[-ip\t<ipAddress = localhost>" );
-		System.out.println( "\t\t[-p \t<tcpPort = 8194>" );
-		System.out.println( "\t\t[-s \t<Query string = IBM>" );
-		System.out.println( "\t\t[-m \t<Max Results = 10>" );
-		System.out.println(
-				"\t\t[-auth <option>]\tauthentication option: "
-						+ "user|none|app=<app>|userapp=<app>|dir=<property> (default: none)" );
-		System.out.println(
-				"\t\t[-f <filter=value>]\tFollowing are the filters for each request: " );
-
-		System.out.print( "\t\t\tinstrumentListRequest:" );
-		printFilters( FILTERS_INSTRUMENTS );
-		System.out.print( "\t\t\tgovtListRequest:" );
-		printFilters( FILTERS_GOVT );
-		System.out.print( "\t\t\tcurveListRequest:" );
-		printFilters( FILTERS_CURVE );
+	private void printUsage() throws Exception {
+		throw new Exception(
+				"Usage:\n Instruments Lookup service Example.\n\t\t[-r \t<requestType> = instrumentListRequest]\n\trequestType: instrumentListRequest|curveListRequest|govtListRequest\n\t\t[-s \t<Query string = IBM>\n\t\t[-m \t<Max Results = 10>\n\t\t[-auth <option>]\tauthentication option: user|none|app=<app>|userapp=<app>|dir=<property> (default: none)\n\t\t[-f <filter=value>]\tFollowing are the filters for each request: \n\t\t\tinstrumentListRequest:\n"
+						+ printFilters( FILTERS_INSTRUMENTS )
+						+ "\n\t\t\tgovtListRequest:\n"
+						+ printFilters( FILTERS_GOVT )
+						+ "\n\t\t\tcurveListRequest:\n"
+						+ printFilters( FILTERS_CURVE ) );
 	}
 
-	private void printFilters(String[] filters) {
-		System.out.print( "\t" );
+	private String printFilters(String[] filters) {
+		String res = "\t\n";
 		for (int i = 0; i < filters.length - 1; i++) {
-			System.out.print( filters[ i ] + "|" );
+			res += filters[ i ] + "|\n";
 		}
-		System.out.print( filters[ filters.length - 1 ] + " (default: none)\n" );
+		res += filters[ filters.length - 1 ] + " (default: none)\n";
+		return res;
 	}
 
 	private void parseCommandLine(String[] args) throws Exception {
@@ -164,12 +147,6 @@ public class SecurityLookupExample
 			if (args[ i ].equalsIgnoreCase( "-r" ) && i + 1 < args.length) {
 				// The fist argument is always the request type
 				d_requestType = Name.getName( args[ ++i ] );
-			}
-			else if (args[ i ].equalsIgnoreCase( "-ip" ) && i + 1 < args.length) {
-				d_host = args[ ++i ];
-			}
-			else if (args[ i ].equalsIgnoreCase( "-p" ) && i + 1 < args.length) {
-				d_port = Integer.parseInt( args[ ++i ] );
 			}
 			else if (args[ i ].equalsIgnoreCase( "-s" ) && i + 1 < args.length) {
 				d_queryString = args[ ++i ];
@@ -348,23 +325,23 @@ public class SecurityLookupExample
 		return res;
 	}
 
-	private List<List<SecurityLookUpResult>> processResponseEvent(Event event) {
+	private List<SecurityLookUpResult> processResponseEvent(Event event) throws Exception {
 		MessageIterator msgIter = event.messageIterator();
-		List<List<SecurityLookUpResult>> res = new ArrayList<>();
+		List<SecurityLookUpResult> res = new ArrayList<>();
 		while (msgIter.hasNext()) {
 			Message msg = msgIter.next();
 			if (msg.messageType() == ERROR_RESPONSE) {
 				String description = msg.getElementAsString( DESCRIPTION_ELEMENT );
-				System.out.println( "Received error: " + description );
+				throw new Exception( "Received error: " + description );
 			}
 			else if (msg.messageType() == INSTRUMENT_LIST_RESPONSE) {
-				res.add( processInstrumentListResponse( msg ) );
+				res.addAll( processInstrumentListResponse( msg ) );
 			}
 			else if (msg.messageType() == CURVE_LIST_RESPONSE) {
-				res.add( processCurveListResponse( msg ) );
+				res.addAll( processCurveListResponse( msg ) );
 			}
 			else if (msg.messageType() == GOVT_LIST_RESPONSE) {
-				res.add( processGovtListResponse( msg ) );
+				res.addAll( processGovtListResponse( msg ) );
 			}
 			else {
 				System.err.println( "Unknown MessageType received" );
@@ -373,9 +350,9 @@ public class SecurityLookupExample
 		return res;
 	}
 
-	private List<List<SecurityLookUpResult>> eventLoop(Session session) throws InterruptedException {
+	private List<SecurityLookUpResult> eventLoop(Session session) throws Exception {
 		boolean done = false;
-		List<List<SecurityLookUpResult>> res = new ArrayList<>();
+		List<SecurityLookUpResult> res = new ArrayList<>();
 		while (!done) {
 			Event event = session.nextEvent();
 			if (event.eventType() == Event.EventType.PARTIAL_RESPONSE) {
@@ -437,63 +414,25 @@ public class SecurityLookupExample
 		session.sendRequest( request, identity, null );
 	}
 
-	private static void stopSession(Session session) {
-		if (session != null) {
-			boolean done = false;
-			while (!done) {
-				try {
-					session.stop();
-					done = true;
-				} catch (InterruptedException e) {
-					System.out.println( "InterrupedException caught (ignoring)" );
-				}
-			}
-		}
-	}
-
-	public List<List<SecurityLookUpResult>> run(String[] args) {
-		Session session = null;
+	public List<SecurityLookUpResult> run(Session session, String[] args) throws Exception {
 		try {
 			parseCommandLine( args );
-			SessionOptions sessionOptions = new SessionOptions();
-			sessionOptions.setServerHost( d_host );
-			sessionOptions.setServerPort( d_port );
-			sessionOptions.setAuthenticationOptions( d_authOptions );
-
-			System.out.println( "Connecting to " + d_host + ":" + d_port );
-			session = new Session( sessionOptions );
-			if (!session.start()) {
-				System.err.println( "Failed to start session." );
-				return null;
-			}
-
-			Identity identity = session.createIdentity();
-			if (d_authOptions != null) {
-				authorize( identity, session );
-			}
-
-			if (!session.openService( INSTRUMENT_SERVICE )) {
-				System.err.println( "Failed to open " + INSTRUMENT_SERVICE );
-				return null;
-			}
-
-			sendRequest( session, identity );
-			return eventLoop( session );
 		} catch (Exception e) {
 			System.err.printf( "Exception: %1$s\n", e.getMessage() );
 			System.err.println();
 			printUsage();
-		} finally {
-			if (session != null) {
-				stopSession( session );
-			}
 		}
-		return null;
-	}
+		Identity identity = session.createIdentity();
+		if (d_authOptions != null) {
+			authorize( identity, session );
+		}
 
-	public static void main(String[] args) {
-		System.out.println( "SecurityLookupExample" );
-		SecurityLookupExample example = new SecurityLookupExample();
-		example.run( args );
+		if (!session.openService( INSTRUMENT_SERVICE )) {
+			System.err.println( "Failed to open " + INSTRUMENT_SERVICE );
+			return null;
+		}
+
+		sendRequest( session, identity );
+		return eventLoop( session );
 	}
 }

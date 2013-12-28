@@ -9,15 +9,15 @@ import java.util.Set;
  */
 @SuppressWarnings("serial")
 public abstract class TimeSeries<T extends TimeUnit> implements Serializable {
-	private String _name;
-	protected LinkedHashMap<String, T> _timeSeriesData;
-	private Class<T> _clazz;
+	private String						_name;
+	protected LinkedHashMap<String, T>	_timeSeriesData;
+	private Class<T>					_clazz;
 
 	public static class TSType {
-		public static final TSType HisSec = new TSType("HisSec");
-		public static final TSType HisDiv = new TSType("HisDiv");
+		public static final TSType	HisSec	= new TSType( "HisSec" );
+		public static final TSType	HisDiv	= new TSType( "HisDiv" );
 
-		private final String _type;
+		private final String		_type;
 
 		private TSType(final String type) {
 			_type = type;
@@ -38,15 +38,14 @@ public abstract class TimeSeries<T extends TimeUnit> implements Serializable {
 		_timeSeriesData = new LinkedHashMap<>();
 	}
 
-	public void addNode(final String time) throws InstantiationException,
-	IllegalAccessException {
-		_timeSeriesData.put(time, _clazz.newInstance());
+	public void addNode(final String time) throws InstantiationException, IllegalAccessException {
+		_timeSeriesData.put( time, _clazz.newInstance() );
 	}
 
 	public LinkedHashMap<String, T> getTSData() {
 		return _timeSeriesData;
 	}
-	
+
 	public Set<String> getDates() {
 		return _timeSeriesData.keySet();
 	}
@@ -62,4 +61,10 @@ public abstract class TimeSeries<T extends TimeUnit> implements Serializable {
 	public void setT(final Class<T> c) {
 		_clazz = c;
 	}
+
+	/**
+	 * print time series piece on specific date
+	 * @param date the date
+	 */
+	public abstract void printPiece(String date);
 }

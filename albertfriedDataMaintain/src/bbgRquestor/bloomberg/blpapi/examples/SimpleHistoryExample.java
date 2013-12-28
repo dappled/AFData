@@ -62,7 +62,7 @@ public class SimpleHistoryExample {
         Request request = refDataService.createRequest("HistoricalDataRequest");
 
         Element securities = request.getElement("securities");
-        securities.appendValue("IBM US Equity");
+        securities.appendValue("USSO1 Curncy");
         securities.appendValue("MSFT US Equity");
 
         Element fields = request.getElement("fields");
@@ -70,9 +70,9 @@ public class SimpleHistoryExample {
         fields.appendValue("OPEN");
 
         request.set("periodicityAdjustment", "ACTUAL");
-        request.set("periodicitySelection", "MONTHLY");
-        request.set("startDate", "20060101");
-        request.set("endDate", "20061231");
+        request.set("periodicitySelection", "DAILY");
+        request.set("startDate", "20131225");
+        request.set("endDate", "20131226");
         request.set("maxDataPoints", 100);
         request.set("returnEids", true);
 

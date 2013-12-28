@@ -3,17 +3,17 @@ package bbgRquestor.bloomberg.beans;
 /**
  * @author user
  */
-public class HisDivTS extends TimeSeries<HistoricalDividendTimeUnit>{
+public class HisDivTS extends TimeSeries<DividendTimeUnit>{
 	private static final long					serialVersionUID	= 4727075624731007020L;
 	
 	public HisDivTS(String name) {
 		super(name);
-		setT(HistoricalDividendTimeUnit.class);
+		setT(DividendTimeUnit.class);
 	}
 
 	public HisDivTS() {
 		super();
-		setT(HistoricalDividendTimeUnit.class);
+		setT(DividendTimeUnit.class);
 	}
 	
 
@@ -68,5 +68,11 @@ public class HisDivTS extends TimeSeries<HistoricalDividendTimeUnit>{
 	}
 	public void setOptionImpliedHigh(String date, double optionImpliedHigh) {
 		this._timeSeriesData.get(date).setOptionImpliedHigh(optionImpliedHigh);
+	}
+	
+	@Override
+	public void printPiece(String date) {
+		System.out.println("DeclareDate: " + date);
+		_timeSeriesData.get( date ).printPiece();
 	}
 }

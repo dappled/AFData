@@ -7,14 +7,14 @@ import java.util.List;
 /**
  * @author Zhenghong Dong
  */
-public class HistoricalRequest implements Serializable {
+public class DataRequest implements Serializable {
 	private static final long	serialVersionUID	= -7346393496648035393L;
 	private final String _type;
 	private final List<String> _names;
 	private final List<String> _fields;
 	private final HashMap<String, Object> _properties;
 	
-	public HistoricalRequest(String type, List<String> names, List<String> fields, HashMap<String, Object> properties) {
+	public DataRequest(String type, List<String> names, List<String> fields, HashMap<String, Object> properties) {
 		_names = names;
 		_fields = fields;
 		_properties = properties;
