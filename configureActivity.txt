@@ -1,0 +1,1 @@
+java -jar C:\Users\rn.ALBERTFRIED\Desktop\eclipse\git\Dong\DataValidation\out\datavalidation.jar /localFile c:\temp\tradesummary[MMddyyyy].csv /brokerFile c:\temp\[yyyyMMdd]_01.1_vinetrde /outFile c:\temp\ActivityMismatch[MMddyyyy].xls /mail rn@albertfried.com /type activity

@@ -1,0 +1,1 @@
+/dbserver PROP-RN\SQLEXPRESS /outFile c:\temp\PortfolioMargin[MMddyyyy].xls /mail rn@albertfried.com /type pm
