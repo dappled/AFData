@@ -35,17 +35,6 @@ public class ParseDate {
 	}
 
 	/**
-	 * Return today's date in string format MM/DD/YYYY like 10/24/2013
-	 * @return today's date in string format
-	 * @throws Exception
-	 */
-	public static String todayString() {
-		String ret = LocalDate.now().toString();
-		ret = ret.replaceAll( "-", "" );
-		return ParseDate.standardFromyyyyMMdd( ret );
-	}
-
-	/**
 	 * Convert date string from yyyyMMdd to MM/dd/yyyy
 	 * @param date String in yyyyMMdd format
 	 * @return date String in MM/dd/yyyy format
@@ -217,7 +206,7 @@ public class ParseDate {
 				fillDigitalString( cal.get( Calendar.DATE ) ),
 				cal.get( Calendar.YEAR ) );
 	}
-
+	
 	/**
 	 * Return the next day of a certain day in format MM/dd/yyyy
 	 * @param date

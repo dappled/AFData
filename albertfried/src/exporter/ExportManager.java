@@ -17,9 +17,11 @@ public class ExportManager {
 	public static void main(final String[] args) throws Exception {
 		ExportManager.parseArgs( args );
 		ExportManager._exporter.report( ExportManager._outFile, ParseDate.today );
+		// send the reports using email if provided
 		if (_addressList != null) {
 			_exporter.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
 		}
+		// send the reports using ftp if provided
 		if (_ftpAddress != null) {
 			_exporter.uploadFtp( _outFile, _ftpAddress);
 		}
@@ -61,6 +63,10 @@ public class ExportManager {
 					// GSEC upload 
 					else if (args[ i ].equals( "gsecUpload" )) {
 						_exporter = new GSUploader( _dbServer, _catalog );						
+					}
+					// bbu
+					else if (args[i].equals( "bbu" )) {
+						_exporter = new BBU( _dbServer, _catalog );
 					}
 					else throw new Exception( "ImporterManager: /type argument unsopported: " + args[ i ] );
 					break;

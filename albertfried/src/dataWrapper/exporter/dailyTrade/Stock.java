@@ -9,7 +9,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import utils.StringUtils;
-import dataWrapper.DailyTradeAbstract;
 
 /**
  * @author Zhenghong Dong

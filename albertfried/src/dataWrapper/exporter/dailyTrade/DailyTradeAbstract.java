@@ -1,7 +1,6 @@
-package dataWrapper;
+package dataWrapper.exporter.dailyTrade;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import dataWrapper.RealBasic;
 
 
 /**
@@ -25,8 +24,6 @@ public abstract class DailyTradeAbstract extends RealBasic {
 		_price = price;
 		_broker = broker;
 	}
-	
-	public abstract void writeCSV(FileWriter out) throws IOException;
 	
 	public String getAccount() {
 		return _account;

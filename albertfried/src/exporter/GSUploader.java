@@ -10,7 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import dataWrapper.DailyTradeAbstract;
+import dataWrapper.exporter.dailyTrade.DailyTradeAbstract;
 import dataWrapper.exporter.dailyTrade.Option;
 import dataWrapper.exporter.dailyTrade.Stock;
 
@@ -18,15 +18,13 @@ import dataWrapper.exporter.dailyTrade.Stock;
  * @author Zhenghong Dong
  */
 public class GSUploader extends ExporterBase {
-	private final String	_FTPPassword	= "side450a";
-	private final String	_FTPUsername	= "u747113";
-
 	/**
 	 * @param dbServer
 	 * @param catalog
 	 */
 	public GSUploader(String dbServer, String catalog) {
 		super( dbServer, catalog );
+		setFTPInfo( "side450a", "u747113" );
 	}
 
 	@Override
@@ -139,15 +137,4 @@ public class GSUploader extends ExporterBase {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	protected String getFTPUserName() {
-		return _FTPUsername;
-	}
-
-	@Override
-	protected String getFTPPassword() {
-		return _FTPPassword;
-	}
-
 }

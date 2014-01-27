@@ -1,5 +1,8 @@
 package dataWrapper;
 
+import java.io.FileWriter;
+import java.io.IOException;
+
 import utils.poi.PoiRecord;
 
 /**
@@ -17,4 +20,5 @@ public abstract class RealBasic implements PoiRecord {
 		return _symbol;
 	}
 	
+	public abstract void writeCSV(FileWriter out) throws IOException;
 }

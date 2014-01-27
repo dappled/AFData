@@ -19,7 +19,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import utils.ParseDate;
 import utils.poi.WriteXls;
-import dataWrapper.PMAbstract;
+import dataWrapper.exporter.portfolioMargin.PMAbstract;
 import dataWrapper.exporter.portfolioMargin.PMDailyAnalysis;
 import dataWrapper.exporter.portfolioMargin.PMDailyDetail;
 import dataWrapper.exporter.portfolioMargin.PMDailyDifference;

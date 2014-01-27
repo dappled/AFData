@@ -1,6 +1,8 @@
 package dataWrapper.exporter.validator;
 
-import dataWrapper.RecordAbstract;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import utils.DoubleComparator;
 
 public abstract class ActivityAbstract extends RecordAbstract {
@@ -79,4 +81,7 @@ public abstract class ActivityAbstract extends RecordAbstract {
 	public void setDescription(final String description) {
 		_description = description;
 	}
+	
+	@Override
+	public void writeCSV(FileWriter out) throws IOException {}
 }

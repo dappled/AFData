@@ -12,6 +12,9 @@ import utils.GeneralImporterExporter;
  * @author Zhenghong Dong
  */
 public abstract class ExporterBase extends GeneralImporterExporter {
+	protected String	_FTPPassword	= null;
+	protected String	_FTPUsername	= null;
+
 	/***********************************************************************
 	 * Constructor
 	 ***********************************************************************/
@@ -32,8 +35,8 @@ public abstract class ExporterBase extends GeneralImporterExporter {
 
 	/**
 	 * Upload files to ftp
-	 * @param _outFile
-	 * @param _ftpAddress
+	 * @param outFile files to be uploaded, should be seperated by ; 
+	 * @param ftpAddress
 	 */
 	public void uploadFtp(String outFile, String ftpAddress) {
 		FTPClient client = new FTPClient();
@@ -69,10 +72,15 @@ public abstract class ExporterBase extends GeneralImporterExporter {
 	}
 
 	protected String getFTPUserName() {
-		return null;
+		return _FTPUsername;
 	}
 
 	protected String getFTPPassword() {
-		return null;
+		return _FTPPassword;
+	}
+	
+	protected void setFTPInfo(String userName, String psw) {
+		_FTPUsername = userName;
+		_FTPPassword = psw;
 	}
 }
