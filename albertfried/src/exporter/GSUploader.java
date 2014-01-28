@@ -24,7 +24,7 @@ public class GSUploader extends ExporterBase {
 	 */
 	public GSUploader(String dbServer, String catalog) {
 		super( dbServer, catalog );
-		setFTPInfo( "side450a", "u747113" );
+		setFTPInfo( "u747113", "side450a" );
 	}
 
 	@Override
