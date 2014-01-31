@@ -1,5 +1,7 @@
 package dataWrapper.exporter.validator;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Date;
 
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -9,7 +11,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import utils.DoubleComparator;
 import utils.ParseDate;
-import dataWrapper.RecordAbstract;
 
 /**
  * @author Zhenghong Dong
@@ -132,4 +133,7 @@ public class Position extends RecordAbstract {
 	private String getUnderlying() {
 		return _underlying;
 	}
+	
+	@Override
+	public void writeCSV(FileWriter out) throws IOException {}
 }

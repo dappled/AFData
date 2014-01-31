@@ -1,11 +1,12 @@
 package dataWrapper.exporter.portfolioMargin;
 
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-
-import dataWrapper.PMAbstract;
 
 /**
  * @author Zhenghong Dong
@@ -126,4 +127,7 @@ public class PMDailyDetail extends PMAbstract {
 	public String getTicker() {
 		return _ticker;
 	}
+
+	@Override
+	public void writeCSV(FileWriter out) throws IOException {}
 }

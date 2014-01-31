@@ -1,4 +1,6 @@
-package dataWrapper;
+package dataWrapper.exporter.portfolioMargin;
+
+import dataWrapper.RealBasic;
 
 /**
  * @author rn

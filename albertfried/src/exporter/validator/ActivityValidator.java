@@ -19,9 +19,9 @@ import org.apache.poi.ss.usermodel.Workbook;
 import utils.ParseDate;
 import utils.poi.PoiRecord;
 import utils.poi.WriteXls;
-import dataWrapper.RecordAbstract;
 import dataWrapper.exporter.validator.BrokerActivity;
 import dataWrapper.exporter.validator.LocalActivity;
+import dataWrapper.exporter.validator.RecordAbstract;
 
 public class ActivityValidator extends ValidatorBase {
 	public ActivityValidator() {}

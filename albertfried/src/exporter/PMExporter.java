@@ -19,7 +19,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import utils.ParseDate;
 import utils.poi.WriteXls;
-import dataWrapper.PMAbstract;
+import dataWrapper.exporter.portfolioMargin.PMAbstract;
 import dataWrapper.exporter.portfolioMargin.PMDailyAnalysis;
 import dataWrapper.exporter.portfolioMargin.PMDailyDetail;
 import dataWrapper.exporter.portfolioMargin.PMDailyDifference;
@@ -37,7 +37,7 @@ public class PMExporter extends ExporterBase {
 	}
 
 	@Override
-	public void report(String outFile, final String today) throws Exception {
+	public void report(String outFile, final String today, final String ftpAddress) throws Exception {
 		// generate difference list
 		List<PMAbstract> diffList = getDifference( today );
 
@@ -60,7 +60,7 @@ public class PMExporter extends ExporterBase {
 				"where importedDate = cast('" + today + "' as Date)) as today " +
 				"full outer join " +
 				"(select Symbol, Requirement from [Clearing].[dbo].[PMRequirement] " +
-				"where importedDate = (select MAX(importedDate) from Clearing.dbo.PMRequirement where importedDate < CAST('" + today + "' as DATE))) as yesterday " +
+				"where importedDate = Trading.dbo.GetPrevTradeDate(1)) as yesterday " +
 				"on today.Symbol = yesterday.Symbol)) as tmp " +
 				"where tmp.Change <> 0 " +
 				"order by Change desc";
@@ -232,7 +232,4 @@ public class PMExporter extends ExporterBase {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	public void uploadFtp(String _outFile, String _ftpAddress) {}
 }

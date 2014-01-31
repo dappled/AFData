@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import utils.GeneralImporterExporter;
-import dataWrapper.RecordAbstract;
+import dataWrapper.exporter.validator.RecordAbstract;
 
 /**
  * @author Zhenghong Dong

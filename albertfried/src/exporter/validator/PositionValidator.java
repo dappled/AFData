@@ -17,8 +17,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 
 import utils.poi.PoiRecord;
 import utils.poi.WriteXls;
-import dataWrapper.RecordAbstract;
 import dataWrapper.exporter.validator.Position;
+import dataWrapper.exporter.validator.RecordAbstract;
 
 /**
  * @author Zhenghong Dong

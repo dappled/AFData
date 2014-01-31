@@ -1,4 +1,6 @@
-package dataWrapper;
+package dataWrapper.exporter.validator;
+
+import dataWrapper.RealBasic;
 
 
 /**
@@ -72,4 +74,5 @@ public abstract class RecordAbstract extends RealBasic implements Comparable<Rec
 	public String getSide() {
 		return _side;
 	}
+	
 }

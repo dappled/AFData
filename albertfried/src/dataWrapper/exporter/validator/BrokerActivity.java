@@ -65,4 +65,5 @@ public class BrokerActivity extends ActivityAbstract {
 	 * Getter and Setter
 	 ***********************************************************************/
 	public double getPrincipal() { return _principal; }
+
 }

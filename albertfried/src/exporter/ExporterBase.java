@@ -28,14 +28,14 @@ public abstract class ExporterBase extends GeneralImporterExporter {
 	 * @param date
 	 * @throws Exception
 	 */
-	public abstract void report(final String outFile, final String date) throws Exception;
+	public abstract void report(final String outFile, final String date, final String ftpAddress) throws Exception;
 
 	/**
 	 * Upload files to ftp
-	 * @param _outFile
-	 * @param _ftpAddress
+	 * @param outFile files to be uploaded, should be seperated by ; 
+	 * @param ftpAddress
 	 */
-	public void uploadFtp(String outFile, String ftpAddress) {
+	public void uploadFtp(String outFile, String ftpAddress, String ftpUserName, String ftpPassword) {
 		FTPClient client = new FTPClient();
 		FileInputStream fis = null;
 
@@ -43,13 +43,13 @@ public abstract class ExporterBase extends GeneralImporterExporter {
 		boolean upload;
 		try {
 			client.connect( ftpAddress );
-			client.login( getFTPUserName(), getFTPPassword() );
+			client.login( ftpUserName, ftpPassword );
 			reply = client.getReplyCode();
 
 			if (!FTPReply.isPositiveCompletion( reply )) {
 				client.disconnect();
 				System.err.println( "FTP server refused connection." );
-				System.exit( 1 );
+				return;
 			} else {
 				for (String file : outFile.split( ";" )) {
 					fis = new FileInputStream( file );
@@ -66,13 +66,5 @@ public abstract class ExporterBase extends GeneralImporterExporter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	protected String getFTPUserName() {
-		return null;
-	}
-
-	protected String getFTPPassword() {
-		return null;
 	}
 }
