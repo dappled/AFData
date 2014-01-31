@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -27,8 +28,8 @@ import org.apache.activemq.broker.BrokerService;
 import utils.StringUtils;
 import bbgRequestor.bloomberg.BbgNames;
 import bbgRquestor.bloomberg.beans.SecurityLookUpResult;
-import bbgRquestor.bloomberg.beans.SecurityTimeUnit;
 import bbgRquestor.bloomberg.beans.TimeSeries;
+import bbgRquestor.bloomberg.beans.TimeUnit;
 
 /**
  * This is the server which can publish bbg data request to user defined queue using publishQuest, then return the data
@@ -37,17 +38,21 @@ import bbgRquestor.bloomberg.beans.TimeSeries;
  * @author Zhenghong Dong
  */
 public class BbgDataServer implements MessageListener {
+	protected BrokerService						_broker;
+	protected boolean							_connected;
 	protected static String						_brokerURL	= "tcp://10.0.0.155:61616";
 	protected static ActiveMQConnectionFactory	_factory;
 	protected Connection						_connection;
 	protected Session							_session;
 	protected MessageProducer					_dataRequestSender;
 	protected Destination						_resultQueue;
+	protected Destination						_connectionDestination;
+	protected MessageProducer					_connectionReplySender;
 
 	/* returning data */
 	@SuppressWarnings("rawtypes")
 	Map<String, ? extends TimeSeries>			_hisData;
-	List<SecurityTimeUnit>						_refData;
+	List<? extends TimeUnit>					_refData;
 	List<SecurityLookUpResult>					_lookupResult;
 	boolean										_received;
 	boolean										_error		= false;
@@ -57,9 +62,18 @@ public class BbgDataServer implements MessageListener {
 	 ***********************************************************************/
 	/**
 	 * Generate a Simulation Server.
-	 * @throws JMSException when connection error happens
+	 * @throws Exception
 	 */
-	public BbgDataServer(final String serverName) throws JMSException {
+	public BbgDataServer(final String serverName) throws Exception {
+		/** broker part */
+		/* broker/server part */
+		_broker = new BrokerService();
+		// configure the broker
+		_broker.setBrokerName( "Dong" );
+		_broker.addConnector( "tcp://10.0.0.155:61616" );
+		_broker.start();
+		System.out.println( "Broker is up" );
+
 		_factory = new ActiveMQConnectionFactory( _brokerURL );
 		// I use async sends for performance reason
 		BbgDataServer._factory.setUseAsyncSend( true );
@@ -68,14 +82,23 @@ public class BbgDataServer implements MessageListener {
 		_dataRequestSender = _session.createProducer( null );
 
 		_connection.start();
+		_connected = false;
+		_connectionDestination = null;
+		_connectionReplySender = _session.createProducer( null );
+		_connectionReplySender.setDeliveryMode( DeliveryMode.NON_PERSISTENT );
+		this.listenToConnection();
 	}
 
 	/***********************************************************************
 	 * Destructor
+	 * @throws Exception
 	 ***********************************************************************/
-	public void close() throws JMSException {
+	public void close() throws Exception {
 		if (_connection != null) {
 			_connection.close();
+		}
+		if (_broker != null) {
+			_broker.stop();
 		}
 	}
 
@@ -158,14 +181,15 @@ public class BbgDataServer implements MessageListener {
 	 * @throws JMSException
 	 * @throws InterruptedException
 	 */
-	public List<SecurityTimeUnit> publishRefQuest(String queueName, List<String> names, List<String> fields) throws JMSException, InterruptedException {
+	public List<? extends TimeUnit> publishRefQuest(String queueName, String type, List<String> names, List<String> fields) throws JMSException,
+			InterruptedException {
 		// set up publisher and listener
 		_dataRequestSender = _session.createProducer( _session.createQueue( queueName ) );
 		_resultQueue = _session.createQueue( "receiver_" + queueName );
 
 		final MessageConsumer dataResultReceiver = _session.createConsumer( _resultQueue );
 		dataResultReceiver.setMessageListener( this );
-		DataRequest request = new DataRequest( "ref", names, fields, null );
+		DataRequest request = new DataRequest( type, names, fields, null );
 		// send the message
 		try {
 			_received = false;
@@ -187,11 +211,13 @@ public class BbgDataServer implements MessageListener {
 	}
 
 	// ask clients listening to this queue to kill themselves
-	public void publishSuicideQuest(String queueName) throws JMSException {
+	public void publishSuicideQuest(String queueName) throws Exception {
+		System.out.println( "Gonna kill the other side" );
 		_dataRequestSender = _session.createProducer( _session.createQueue( queueName ) );
 		final Message msg = _session.createMessage();
 		_dataRequestSender.send( msg );
-		this.close();
+		Thread.sleep( 1000 ); // wait client to close
+		_connected = false;
 	}
 
 	public void publishTestQuest(String queueName) throws JMSException, InterruptedException {
@@ -212,67 +238,81 @@ public class BbgDataServer implements MessageListener {
 	}
 
 	/**
-	 * publish quest according to command line import, return 0 if good, 1 if error in remote side/request, -1 if
-	 * finished job
+	 * publish quest according to command line import, return 0 if good, 1 if error in remote side/request, -1 if want
+	 * to close current connection, -2 if want to exit
 	 * @throws Exception
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private int startCommandLine(String queueName, String line) throws Exception {
-		_error = false;
-		int i = 1;
-		String[] split = StringUtils.arrayTrimQuotes( StringUtils.splitWIthQuotes( line ) );
-		List<String> names;
-		List<String> fields;
-		switch (split[ 0 ]) {
-			case "historical":
-				String type = split[ i++ ];
-				names = Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) ) );
-				fields = Arrays.asList( StringUtils.arrayTrim( StringUtils.arrayToUpper( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) );
-				Map<String, ? extends TimeSeries> res = this.publishHisQuest( queueName, type, names, fields,
-						parseProperties( split[ i++ ].replace( "\"", "" ).split( "," ) ) );
-				if (_error == true) {// error in response
-					return 1;
-				}
-				for (String n : names) {
-					System.out.println( "Name: " + n );
-					TimeSeries ts = res.get( n );
-					Set<String> set = ts.getDates();
-					for (String d : set) {
-						ts.printPiece( d );
+		try {
+			_error = false;
+			int i = 1;
+			String[] split = StringUtils.arrayTrimQuotes( StringUtils.splitWIthQuotes( line ) );
+			List<String> names;
+			List<String> fields;
+			String type;
+			switch (split[ 0 ]) {
+				case "historical":
+					type = split[ i++ ];
+					names = Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) ) );
+					fields = Arrays.asList( StringUtils.arrayTrim( StringUtils.arrayToUpper( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) );
+					Map<String, ? extends TimeSeries> res = this.publishHisQuest( queueName, type, names, fields,
+							parseProperties( split[ i++ ].replace( "\"", "" ).split( "," ) ) );
+					if (_error == true) {// error in response
+						return 1;
 					}
-				}
-				break;
-			case "lookup":
-				List<SecurityLookUpResult> res3 = this.publishLookupQuest( queueName, Arrays.copyOfRange( split, 1, split.length ) );
-				if (_error == true) { // error in response
-					return 1;
-				}
-				for (SecurityLookUpResult re : res3) {
-					re.printPiece();
-				}
-				break;
-			case "reference":
-				names = Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) ) );
-				fields = Arrays.asList( StringUtils.arrayTrim( StringUtils.arrayToUpper( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) );
-				List<SecurityTimeUnit> res2 = this.publishRefQuest( queueName, names, fields );
-				if (_error == true) {// error in response
-					return 1;
-				}
-				for (SecurityTimeUnit re : res2) {
-					re.printPiece();
-				}
-				break;
-			case "close":
-				this.publishSuicideQuest( queueName );
-				this.close();
-				return -1;
-			case "test":
-				System.out.println( "Test start" );
-				this.publishTestQuest( queueName );
-				break;
-			default:
-				this.printUsage();
-				break;
+					for (String n : names) {
+						System.out.println( "Name: " + n );
+						TimeSeries ts = res.get( n );
+						Set<String> set = ts.getDates();
+						for (String d : set) {
+							ts.printPiece( d );
+						}
+					}
+					break;
+				case "lookup":
+					List<SecurityLookUpResult> res3 = this.publishLookupQuest( queueName, Arrays.copyOfRange( split, 1, split.length ) );
+					if (_error == true) { // error in response
+						return 1;
+					}
+					for (SecurityLookUpResult re : res3) {
+						re.printPiece();
+					}
+					break;
+				case "reference":
+					type = split[ i++ ];
+					names = Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) ) );
+					fields = Arrays.asList( StringUtils.arrayTrim( StringUtils.arrayToUpper( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) );
+					List<? extends TimeUnit> res2 = this.publishRefQuest( queueName, type, names, fields );
+					if (_error == true) {// error in response
+						return 1;
+					}
+					for (TimeUnit tu : res2) {
+						tu.printPiece();
+					}
+					break;
+				case "close":
+					this.publishSuicideQuest( queueName );
+					return -1;
+				case "test":
+					System.out.println( "Test start" );
+					this.publishTestQuest( queueName );
+					break;
+				case "exit":
+					this.publishSuicideQuest( queueName ); // kill other side too when exit
+					System.out.println( "Gonna exit." );
+					this.close();
+					return -2;
+				default:
+					this.printUsage();
+					break;
+			}
+		} catch (Exception e) {
+			System.err.println( "Error happened on server, will close client: " + e );
+			this.publishSuicideQuest( queueName );
+			System.out.println( "Gonna exit." );
+			this.close();
+			return -2;
 		}
 		return 0;
 	}
@@ -322,7 +362,7 @@ public class BbgDataServer implements MessageListener {
 					_hisData = (Map<String, ? extends TimeSeries>) message.getObject();
 					break;
 				case "Reference":
-					_refData = (List<SecurityTimeUnit>) message.getObject();
+					_refData = (List<? extends TimeUnit>) message.getObject();
 					break;
 				case "Lookup":
 					_lookupResult = (List<SecurityLookUpResult>) message.getObject();
@@ -349,37 +389,70 @@ public class BbgDataServer implements MessageListener {
 		System.out.println( "Bloomberg data grabber." );
 		System.out
 				.println( "historical type(sec or div) \"names seperated by ,\" \"fields seperated by ,\" \"properties pairs(name:prop) seperated by ,\" or" );
-		System.out.println( "reference \"names seperated by ,\" \"fields seperated by ,\" or" );
+		System.out.println( "reference type(sec or div) \"names seperated by ,\" \"fields seperated by ,\" or" );
 
-		System.out.println( "lookup args(see bbgRquestor.bloomberg.blpapi.examples.SecurityLookupExample) or" );
 		/** {@link bbgRquestor.bloomberg.blpapi.examples.SecurityLookupExample} */
-		System.out.println( "close" );
+		System.out.println( "lookup args(see bbgRquestor.bloomberg.blpapi.examples.SecurityLookupExample) or" );
+
+		System.out.println( "close to close current connection to the client or" );
+		System.out.println( "exit to exit the server" );
+	}
+
+	/** Listen to connection queue */
+	public void listenToConnection() throws Exception {
+		// set up listener
+		_connected = false;
+		// if first time
+		if (_connectionDestination == null) {
+			_connectionDestination = _session.createQueue( "Connection" );
+			MessageConsumer connectionRequestReceiver = _session.createConsumer( _connectionDestination );
+			connectionRequestReceiver.setMessageListener( new MessageListener() {
+				@Override
+				public void onMessage(final Message msg) {
+					try {
+						if (msg.getJMSType().equals( "Connection" )) {
+							System.out.println( "Receive a connection request " );
+							Message re = _session.createMessage();
+							re.setJMSType( msg.getJMSType() );
+							if (_connected) { // already connected, refuse this connection request
+								re.setBooleanProperty( "Connection", false );
+							} else { // accept connection
+								_connected = true;
+								re.setBooleanProperty( "Connection", true );
+							}
+							_connectionReplySender.send( msg.getJMSReplyTo(), re );
+							System.out.println( "Finished replying" );
+						} else System.err.println( "Incorrect connection request" );
+					} catch (JMSException e) {
+						e.printStackTrace();
+					}
+				}
+			} );
+		}
+
+		while (!_connected) {
+			System.out.println( "Waiting for connection" );
+			Thread.sleep( 1000 );
+		}
 	}
 
 	public static void main(String[] args) throws Exception {
-		// start broker
-		BrokerService broker = new BrokerService();
-		// configure the broker
-		broker.setBrokerName( "Dong" );
-		broker.addConnector( "tcp://10.0.0.155:61616" );
-
-		broker.start();
-
 		// initialize server and client
 		final BbgDataServer server = new BbgDataServer( null );
 		final String queueName = "BbgData";
 		BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
+
 		while (true) {
 			System.out.println( "Ready to listen, please enter" );
 			String request = br.readLine();
 
-			if (server.startCommandLine( queueName, request ) < 0) {
-				System.out.println( "Gonna stop" );
-				Thread.sleep( 1000 ); // wait client to sleep
-				broker.stop();
-				return;
-			}
+			int re = server.startCommandLine( queueName, request );
+			if (re == -1) { // current connection closed
+				server.listenToConnection();
+			} else if (re == -2) { return; }
+
 		}
+
 		/* // request parameters
 		 * HashMap<String, Object> properties = new HashMap<>();
 		 * properties.put( BbgNames.Properties.START, "20110101" );
@@ -423,6 +496,5 @@ public class BbgDataServer implements MessageListener {
 		 * }
 		 * }
 		 * server.publishSuicideQuest( queueName ); */
-
 	}
 }

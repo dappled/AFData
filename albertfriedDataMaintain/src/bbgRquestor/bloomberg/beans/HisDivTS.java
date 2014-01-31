@@ -1,5 +1,6 @@
 package bbgRquestor.bloomberg.beans;
 
+
 /**
  * @author user
  */

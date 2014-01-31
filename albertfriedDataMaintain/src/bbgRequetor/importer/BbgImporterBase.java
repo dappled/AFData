@@ -31,18 +31,19 @@ public abstract class BbgImporterBase extends GeneralImporterExporter {
 	/***********************************************************************
 	 * Utilities
 	 ***********************************************************************/
-	public void dump(final String localFile, final String dbName, final String tradeDate, final int wipe)
+	/** get data from localFile, do something, export to destination */
+	public void dump(final String localFile, final String destination, final String tradeDate, final int wipe)
 			throws Exception {
 		if (wipe > 0) {
-			wipeData( dbName, wipe );
+			wipeData( destination, wipe );
 		}
-		dumpHelper( localFile, dbName, tradeDate );
+		dumpHelper( localFile, destination, tradeDate );
 	}
 
 	/**
-	 * Dump local files' info into the database
+	 * Dump local files' info into the database or out file or watever
 	 * @throws Exception
 	 */
-	protected abstract void dumpHelper(String localFile, String dbName, String tradeDate) throws Exception;
+	protected abstract void dumpHelper(String localFile, String destination, String tradeDate) throws Exception;
 
 }

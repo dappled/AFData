@@ -10,7 +10,6 @@ import utils.DateUtils;
 import bbgRequestor.bloomberg.BbgNames.Fields;
 import bbgRquestor.bloomberg.beans.HisDivTS;
 import bbgRquestor.bloomberg.beans.HisSecTS;
-import bbgRquestor.bloomberg.beans.SecurityTimeUnit;
 import bbgRquestor.bloomberg.beans.SecurityLookUpResult;
 import bbgRquestor.bloomberg.beans.TimeSeries;
 import bbgRquestor.bloomberg.beans.TimeSeries.TSType;
@@ -288,8 +287,8 @@ public class BbgDataGrabber {
 	}
 	
 	/** get reference data */
-	public List<SecurityTimeUnit> getRefData(List<String> names, List<String> fields) throws Exception {
-		return (new RefDataExample().run( _session, names, fields ));
+	public List<? extends TimeUnit> getRefData(String t, List<String> names, List<String> fields) throws Exception {
+		return (new RefDataExample().run( _session, t, names, fields ));
 	}
 	
 	public void testRefData() {}

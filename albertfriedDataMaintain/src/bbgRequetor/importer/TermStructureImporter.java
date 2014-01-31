@@ -12,18 +12,18 @@ import bbgRquestor.bloomberg.beans.SecurityTimeUnit;
  * @author Zhenghong Dong
  */
 public class TermStructureImporter extends BbgImporterBase {
-	private final String[]	names	= { "USSO1Z Curncy", "USSO2Z Curncy","USSO3Z Curncy","USSOA Curncy","USSOB Curncy","USSOC Curncy","USSOD Curncy","USSOE Curncy","USSOF Curncy","USSOI Curncy","USSO1 Curncy","USSO1F Curncy","USSO2 Curncy","USSO3 Curncy","USSO4 Curncy","USSO5 Curncy" };
-	private final String[]	fields	= { Fields.last };
+	private final String[]	_names	= { "USSO1Z Curncy", "USSO2Z Curncy","USSO3Z Curncy","USSOA Curncy","USSOB Curncy","USSOC Curncy","USSOD Curncy","USSOE Curncy","USSOF Curncy","USSOI Curncy","USSO1 Curncy","USSO1F Curncy","USSO2 Curncy","USSO3 Curncy","USSO4 Curncy","USSO5 Curncy" };
+	private final String[]	_fields	= { Fields.last };
 
 	public TermStructureImporter(String dbServer, String catalog) throws Exception {
 		super( dbServer, catalog );
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void dumpHelper(String localFile, String dbName, String tradeDate) throws Exception {
 		/** ask client for yield curve data */
-		List<SecurityTimeUnit> res = null;
-		res = _server.publishRefQuest( _queueName, Arrays.asList( names ), Arrays.asList( fields ) );
+		List<SecurityTimeUnit> res = (List<SecurityTimeUnit>) _server.publishRefQuest( _queueName, "sec", Arrays.asList( _names ), Arrays.asList( _fields ) );
 	
 		/** upload data to the database */
 		if (res != null) {

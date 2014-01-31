@@ -1,5 +1,7 @@
 package bbgRquestor.bloomberg.beans;
 
+import bbgRequestor.bloomberg.BbgNames.Fields;
+
 /**
  * @author Zhenghong Dong
  */
@@ -159,5 +161,16 @@ public class SecurityTimeUnit extends TimeUnit {
 		SecurityTimeUnit t = new SecurityTimeUnit( "test" );
 		t.setPE( 100 );
 		t.printPiece();
+	}
+
+	@Override
+	public void set(String fields, Object value) {
+		switch (fields) {
+			case Fields.ask:
+				this.setAsk( (Double)value );
+				break;
+			default:
+				break;
+		}
 	}
 }

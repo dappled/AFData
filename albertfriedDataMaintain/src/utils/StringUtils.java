@@ -10,6 +10,13 @@ public class StringUtils {
 		return String.format( "%s", num );
 	}
 	
+	public static String numberToStringWithoutZeros(Double num){
+		if (num == null) return null;
+		double n = num;
+		if (n == (int) n) return String.format( "%d", (int ) n);
+		return String.format( "%s", n );
+	}
+	
 	public static String numberToStringWithoutZeros(float num){	
 		if (num == (int) num) return String.format( "%d", (int ) num);
 		return String.format( "%s", num );

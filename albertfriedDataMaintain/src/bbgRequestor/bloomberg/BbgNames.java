@@ -62,15 +62,17 @@ public class BbgNames {
 		public static final String	putIV				= "3MO_PUT_IMP_VOL";
 
 		public static final String	dvdHis				= "DVD_HIST";
-		public static final String	declaredDate		= "Declared Date";
-		public static final String	exDate				= "Ex-Date";
-		public static final String	recordDate			= "Record Date";
-		public static final String	payableDate			= "Payable Date";
-		public static final String	divAmount			= "Dividend Amount";
+		public static final String	declaredDate		= "DVD_DECLARED_DT";
+		public static final String	exDate				= "DVD_EX_DT";
+		public static final String	recordDate			= "DVD_RECORD_DT";
+		public static final String	payableDate			= "DVD_PAY_DT";
+		public static final String	divAmount			= "LAST_DPS_GROSS";
 		public static final String	divFreq				= "Dividend Frequency";
 		public static final String	divType				= "Dividend Type";
 		public static final String	OptionImpliedLow	= "OptionImpliedLow";
 		public static final String	OptionImpliedHigh	= "Opt";
 		public static final String	DivPerShare			= "EQY_DPS";
+		public static final String  nextExDate 			= "BDVD_NEXT_EST_EX_DT";
+		public static final String  nextDivAmount		= "BDVD_PROJ_DIV_AMT";
 	}
 }

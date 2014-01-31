@@ -26,4 +26,6 @@ public abstract class TimeUnit implements Serializable {
 	}
 
 	public abstract void printPiece();
+	
+	public abstract void set(String fields, Object value);
 }
