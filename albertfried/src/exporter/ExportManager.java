@@ -6,7 +6,7 @@ import utils.ParseDate;
  * @author Zhenghong Dong
  */
 public class ExportManager {
-	private static String		_addressList	= null;
+	private static String		_emailAddress	= null;
 	private static String		_mailSubject;
 	private static String		_outFile;
 	private static ExporterBase	_exporter;
@@ -16,14 +16,10 @@ public class ExportManager {
 
 	public static void main(final String[] args) throws Exception {
 		ExportManager.parseArgs( args );
-		ExportManager._exporter.report( ExportManager._outFile, ParseDate.today );
+		ExportManager._exporter.report( ExportManager._outFile, ParseDate.today, _ftpAddress );
 		// send the reports using email if provided
-		if (_addressList != null) {
-			_exporter.sendEMail( _outFile, _mailSubject, _addressList, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
-		}
-		// send the reports using ftp if provided
-		if (_ftpAddress != null) {
-			_exporter.uploadFtp( _outFile, _ftpAddress);
+		if (_emailAddress != null) {
+			_exporter.sendEMail( _outFile, _mailSubject, _emailAddress, ParseDate.MMddyyyyFromStandard( ParseDate.yesterday ) );
 		}
 		_exporter.close();
 	}
@@ -36,7 +32,7 @@ public class ExportManager {
 		for (int i = 0; i < args.length; i++) {
 			switch (args[ i ]) {
 				case "/mail":
-					_addressList = args[ ++i ];
+					_emailAddress = args[ ++i ];
 					break;
 				case "/ftp":
 					_ftpAddress = args[ ++i ];

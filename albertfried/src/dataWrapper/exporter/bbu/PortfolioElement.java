@@ -47,6 +47,7 @@ public class PortfolioElement extends RealBasic {
 
 	@Override
 	public void writeCSV(FileWriter out) throws IOException {
+		if (bbgSymbol().contains( "TEST" )) return; //ignore test cases
 		out.append( "vineyard" );
 		out.append( ',' );
 		out.append( bbgSymbol() );
@@ -62,7 +63,8 @@ public class PortfolioElement extends RealBasic {
 	}
 
 	public String bbgSymbol() {
-		if (getSymbol().isEmpty()) return "ZVZZT US Equity";
+		if (getSymbol().isEmpty()) return "ZVZZT US Equity"; // this happens when the symbol is null
+		if (getSymbol().endsWith( " Equity" )) return getSymbol(); // this happens when we already made change using clearing.dbo.bbuSymbolCorrection
 		else {
 			if (getMaturity() == null) {
 				return getSymbol() + " US Equity";

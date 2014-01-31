@@ -31,6 +31,7 @@ public class Stock extends RealBasic {
 
 	@Override
 	public void writeCSV(FileWriter out) throws IOException {
+		if (bbgSymbol().contains( "TEST" )) return; //ignore test cases
 		out.append( "stock" );
 		out.append( ',' );
 		out.append( bbgSymbol() );

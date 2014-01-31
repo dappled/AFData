@@ -15,13 +15,27 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class ParseDate {
 	// last working day
-	public static String	yesterday	= getPreviousWorkingDay( standardFromDate( new Date() ) );
+	public static String	yesterday		= getPreviousWorkingDay( standardFromDate( new Date() ) );
 	// today should be the next day of yesterday.. this is for test only, if we want to run some test on Monday for last
-	// friday's report, which should be generated last Saturday, today is then last Saturday which is one day after yesterday but not real today.
+	// friday's report, which should be generated last Saturday, today is then last Saturday which is one day after
+	// yesterday but not real today.
 	// However, we won't never generate report on Monday morning, they should be generated last Saturday.
-	public static String	testToday	= getNextWorkingDay( yesterday );
+	public static String	testToday		= getNextWorkingDay( yesterday );
 	// today's date, usually used as importDate in database
-	public static String	today		= standardFromDate( new Date() );
+	public static String	today			= standardFromDate( new Date() );
+	// two business days later
+	public static String	twoDaysLater	= getNextWorkingDay( getNextWorkingDay( standardFromDate( new Date() ) ) );
+
+	/**
+	 * Compare two string date in standard format
+	 * @return >0 if date1 is after date2, <0 if date1 is before date2
+	 */
+	@SuppressWarnings("deprecation")
+	public static int compare(String date1, String date2) {
+		Date d1 = new Date( date1 );
+		Date d2 = new Date( date2 );
+		return d1.compareTo( d2 );
+	}
 
 	/**
 	 * Given string like yyyyMMdd, return localDate format
@@ -32,6 +46,17 @@ public class ParseDate {
 	public static LocalDate stringToDate(final String date) {
 		final DateTimeFormatter formatter = DateTimeFormat.forPattern( "yyyyMMdd" );
 		return formatter.parseLocalDate( date );
+	}
+
+	/**
+	 * Return today's date in string format MM/DD/YYYY like 10/24/2013
+	 * @return today's date in string format
+	 * @throws Exception
+	 */
+	public static String todayString() {
+		String ret = LocalDate.now().toString();
+		ret = ret.replaceAll( "-", "" );
+		return ParseDate.standardFromyyyyMMdd( ret );
 	}
 
 	/**
@@ -95,6 +120,7 @@ public class ParseDate {
 	 * @throws Exception
 	 */
 	public static String standardFromyyyyBMMBdddd(final String date) {
+		if (date == null || date.equals( "null" )) return date;
 		try {
 			return ParseDate.standardFromyyyyMMdd( date.replace( "-", "" ) );
 		} catch (final Exception e) {
@@ -130,6 +156,15 @@ public class ParseDate {
 		else return standardFromyyyyBMMBdddd( date.toString() );
 	}
 
+	/**
+	 * Convert Calendar date to MM/dd/yyyy
+	 * @param calendar
+	 * @return
+	 */
+	public static String standardFromCal(Calendar calendar) {
+		return standardFromDate( calendar.getTime() );
+	}
+	
 	/**
 	 * Convert standard date format MM/dd/yyyy to MMddyyyy, which will be used to find tradesummary file
 	 * @param date
@@ -206,7 +241,7 @@ public class ParseDate {
 				fillDigitalString( cal.get( Calendar.DATE ) ),
 				cal.get( Calendar.YEAR ) );
 	}
-	
+
 	/**
 	 * Return the next day of a certain day in format MM/dd/yyyy
 	 * @param date
@@ -236,11 +271,9 @@ public class ParseDate {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime( new Date( date ) );
 
-		int dayOfWeek;
 		do {
 			cal.add( Calendar.DAY_OF_MONTH, -1 );
-			dayOfWeek = cal.get( Calendar.DAY_OF_WEEK );
-		} while (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY || ParseDate.isHoliday( cal ));
+		} while (ParseDate.isHoliday( cal ));
 
 		return String.format( "%s/%s/%d", fillDigitalString( cal.get( Calendar.MONTH ) + 1 ),
 				fillDigitalString( cal.get( Calendar.DATE ) ),
@@ -266,15 +299,37 @@ public class ParseDate {
 				cal.get( Calendar.YEAR ) * 10000;
 	}
 
-	private static boolean isHoliday(final Calendar cal) {
+	@SuppressWarnings("deprecation")
+	public static boolean isHoliday(final String date) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime( new Date( date ) );
+		return isHoliday( cal );
+	}
+	
+	public static boolean isHoliday(final Calendar cal) {
 		final int year = cal.get( Calendar.YEAR );
 		final int month = cal.get( Calendar.MONTH ) + 1;
 		final int dayOfMonth = cal.get( Calendar.DAY_OF_MONTH );
 
-		if ((month == 12 && dayOfMonth == 25) || (month == 11 && dayOfMonth == 28 && year == 2013)) return true;
+		int dayOfWeek = cal.get( Calendar.DAY_OF_WEEK );
+		if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) return true;
+
+		if ((month == 12 && dayOfMonth == 25 && year == 2014) || (month == 1 && dayOfMonth == 1 && year == 2014) ||
+				(month == 2 && dayOfMonth == 17 && year == 2014) || (month == 4 && dayOfMonth == 18 && year == 2014) ||
+				(month == 5 && dayOfMonth == 26 && year == 2014) || (month == 7 && dayOfMonth == 4 && year == 2014) ||
+				(month == 9 && dayOfMonth == 1 && year == 2014) || (month == 11 && dayOfMonth == 27 && year == 2014) ||
+				(month == 12 && dayOfMonth == 25 && year == 2015) || (month == 1 && dayOfMonth == 1 && year == 2015) ||
+				(month == 1 && dayOfMonth == 19 && year == 2015) || (month == 2 && dayOfMonth == 16 && year == 2015) ||
+				(month == 4 && dayOfMonth == 3 && year == 2015) || (month == 5 && dayOfMonth == 25 && year == 2015) ||
+				(month == 7 && dayOfMonth == 3 && year == 2015) || (month == 9 && dayOfMonth == 7 && year == 2015) ||
+				(month == 11 && dayOfMonth == 26 && year == 2015) ||
+				(month == 12 && dayOfMonth == 26 && year == 2016) || (month == 1 && dayOfMonth == 1 && year == 2016) ||
+				(month == 1 && dayOfMonth == 18 && year == 2016) || (month == 2 && dayOfMonth == 15 && year == 2016) ||
+				(month == 3 && dayOfMonth == 25 && year == 2016) || (month == 5 && dayOfMonth == 30 && year == 2016) ||
+				(month == 7 && dayOfMonth == 4 && year == 2016) || (month == 9 && dayOfMonth == 5 && year == 2016) ||
+				(month == 11 && dayOfMonth == 24 && year == 2016)) return true;
 
 		// more checks
-
 		return false;
 	}
 
@@ -313,8 +368,14 @@ public class ParseDate {
 		date = getNextFriday( date );
 		System.out.println( date );
 		System.out.println( longFromStandard( standardFromLong( date ) ) );
-		
+
 		String date2 = "1st September 2010";
 		System.out.println( standardFromStringMonthTypeTwo( date2 ) );
+
+		System.out.println( twoDaysLater );
+		System.out.println( compare( twoDaysLater, twoDaysLater ) == 0 );
+		
+		
+		System.out.println(isHoliday( standardFromLong( 20161225 )));
 	}
 }

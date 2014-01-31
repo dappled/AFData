@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import dataWrapper.exporter.bbu.PortfolioElement;
@@ -17,20 +18,55 @@ import dataWrapper.exporter.bbu.Stock;
  * @author Zhenghong Dong
  */
 public class BBU extends ExporterBase {
+	private HashMap<String, String>	_nameCorrection;
+	private final String			_bbuUserName		= "u25210279";
+	private final String			_bbuPassword		= "ly6P%XS+";
+	private final String			_vineyardUserName	= "Vinyard";
+	private final String			_vineyardPassword	= "v1n3yrd";
+
 	/**
 	 * @param dbServer
 	 * @param catalog
 	 */
 	public BBU(String dbServer, String catalog) {
 		super( dbServer, catalog );
-		setFTPInfo( "u25210279", "ly6P%XS+" );
+		getNameCorrection();
+	}
+
+	/** get Bbu Name corrections from database */
+	private void getNameCorrection() {
+		_nameCorrection = new HashMap<>();
+
+		final String query = "SELECT [Symbol], [DealId] from [clearing].[dbo].[BbuSymbolCorrection]";
+
+		try (Statement stmt = _conn.createStatement()) {
+
+			ResultSet rs = stmt.executeQuery( query );
+			while (rs.next()) {
+				int j = 1;
+				_nameCorrection.put( rs.getString( j++ ).trim(), rs.getString( j++ ).trim() );
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void report(String outFile, String date) throws Exception {
+	public void report(String outFile, String date, String ftpAddress) throws Exception {
 		List<Stock> stocks = getStock();
 		List<PortfolioElement> portfolioElements = getPortfolioElement();
 		exportCSV( stocks, portfolioElements, outFile );
+
+		if (ftpAddress != null) {
+			for (String address : ftpAddress.split( ";" )) {
+				String[] detail = address.split( ":" );
+				if (detail[ 0 ].equals( "vineyard" )) {
+					this.uploadFtp( outFile, detail[ 1 ], _vineyardUserName, _vineyardPassword );
+				} else if (detail[ 0 ].equals( "bbu" )) {
+					this.uploadFtp( outFile, detail[ 1 ], _bbuUserName, _bbuPassword );
+				} else throw new Exception( "ftp type should be either vinyard or bbu" );
+			}
+		}
 	}
 
 	private List<Stock> getStock() {
@@ -43,7 +79,7 @@ public class BBU extends ExporterBase {
 			while (rs.next()) {
 				int j = 1;
 				stocks.add( new Stock( rs.getString( j++ ) // symbol
-				) ); 
+				) );
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -60,22 +96,30 @@ public class BBU extends ExporterBase {
 			ResultSet rs = stmt.executeQuery( query );
 			while (rs.next()) {
 				int j = 1;
-				options.add( new PortfolioElement( rs.getString( j++ ), // symbol
-							rs.getFloat( j++ ), // tdQty
-							rs.getDate( j++ ), // maturity
-							rs.getFloat( j++ ), // strike
-							rs.getString( j++ ), // putCall
-							rs.getFloat( j++ ), // baseMarketPrice
-							rs.getString( j++ ), // OCCCode
-							rs.getString( j++ ) // account
-						) ); 
+				options.add( new PortfolioElement( correctName( rs.getString( j++ ) ), // symbol
+						rs.getFloat( j++ ), // tdQty
+						rs.getDate( j++ ), // maturity
+						rs.getFloat( j++ ), // strike
+						rs.getString( j++ ), // putCall
+						rs.getFloat( j++ ), // baseMarketPrice
+						rs.getString( j++ ), // OCCCode
+						rs.getString( j++ ) // account
+				) );
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return options;
 	}
-	
+
+	private String correctName(String name) {
+		if (_nameCorrection.containsKey( name )) {
+			return _nameCorrection.get( name );
+		} else {
+			return name;
+		}
+	}
+
 	private void exportCSV(List<Stock> stocks, List<PortfolioElement> portfolioEliments, String outFile) throws Exception {
 		String[] outFiles = outFile.split( ";" );
 		if (outFiles.length != 2) { throw new Exception( "outFile should be in the format 'stock outfile; portfolioElements outfile'" ); }

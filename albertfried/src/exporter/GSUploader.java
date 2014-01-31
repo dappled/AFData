@@ -18,21 +18,26 @@ import dataWrapper.exporter.dailyTrade.Stock;
  * @author Zhenghong Dong
  */
 public class GSUploader extends ExporterBase {
+	private final String _GSUserName = "u747113";
+	private final String _GSPassword = "side450a";
 	/**
 	 * @param dbServer
 	 * @param catalog
 	 */
 	public GSUploader(String dbServer, String catalog) {
 		super( dbServer, catalog );
-		setFTPInfo( "u747113", "side450a" );
 	}
 
 	@Override
-	public void report(String outFile, String date) throws Exception {
+	public void report(String outFile, String date, String ftpAddress) throws Exception {
 		List<DailyTradeAbstract> stock = getStock();
 		List<DailyTradeAbstract> option = getOption();
 
 		exportCSV( stock, option, outFile );
+		
+		if (ftpAddress != null) {
+			this.uploadFtp( outFile, ftpAddress, _GSUserName, _GSPassword );
+		}
 	}
 
 	private List<DailyTradeAbstract> getStock() {
