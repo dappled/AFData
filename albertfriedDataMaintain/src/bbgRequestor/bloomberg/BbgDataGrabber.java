@@ -3,19 +3,21 @@ package bbgRequestor.bloomberg;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import middleware.bbg.beans.DataRequest.RequestType;
 import utils.DateUtils;
 import bbgRequestor.bloomberg.BbgNames.Fields;
-import bbgRquestor.bloomberg.beans.HisDivTS;
-import bbgRquestor.bloomberg.beans.HisSecTS;
-import bbgRquestor.bloomberg.beans.SecurityLookUpResult;
-import bbgRquestor.bloomberg.beans.TimeSeries;
-import bbgRquestor.bloomberg.beans.TimeSeries.TSType;
-import bbgRquestor.bloomberg.beans.TimeUnit;
-import bbgRquestor.bloomberg.blpapi.examples.RefDataExample;
-import bbgRquestor.bloomberg.blpapi.examples.SecurityLookupExample;
+import bbgRequestor.bloomberg.beans.HisDivTs;
+import bbgRequestor.bloomberg.beans.HisSecTs;
+import bbgRequestor.bloomberg.beans.SecurityLookUpResult;
+import bbgRequestor.bloomberg.beans.TimeSeries;
+import bbgRequestor.bloomberg.beans.TimeUnit;
+import bbgRequestor.bloomberg.blpapi.examples.RefDataExample;
+import bbgRequestor.bloomberg.blpapi.examples.SecurityLookupExample;
 
 import com.bloomberglp.blpapi.Element;
 import com.bloomberglp.blpapi.Event;
@@ -54,7 +56,7 @@ public class BbgDataGrabber {
 			System.err.println( "Failed to open //blp/refdata" );
 			_session = null;
 		}
-		System.out.println("Connected");
+		System.out.println( "Connected" );
 	}
 
 	public void stop() throws InterruptedException {
@@ -63,31 +65,27 @@ public class BbgDataGrabber {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public HashMap<String, ? extends TimeSeries> getTSData(String t, List<String> name, List<String> fields, HashMap<String, Object> properties)
-			throws Exception {
+	/** Get historical request data */
+	public synchronized HashMap<String, ? extends TimeSeries<? extends TimeUnit>> getTsData(RequestType type, Set<String> name, Set<String> fields,
+			HashMap<String, Object> properties) throws Exception {
 		Service refDataService = _session.getService( "//blp/refdata" );
 		Request request;
-		TSType type;
 		Element field;
-		switch (t) {
-			case "div":
-				type = TSType.HisDiv;
-				request = refDataService.createRequest( "ReferenceDataRequest" );
-				field = request.getElement( "fields" );
-				field.appendValue( Fields.dvdHis );
-				break;
-			case "sec":
-				type = TSType.HisSec;
-				request = refDataService.createRequest( "HistoricalDataRequest" );
-				field = request.getElement( "fields" );
-				for (String f : fields) {
-					field.appendValue( f );
-				}
-				setRequestProperties( request, properties );
-				break;
-			default:
-				throw new Exception( "Type support now is historical dividend and historical security" );
+		if (type == RequestType.Div) {
+			request = refDataService.createRequest( "ReferenceDataRequest" );
+			field = request.getElement( "fields" );
+			field.appendValue( Fields.dvdHis );
+		}
+		else if (type == RequestType.Sec) {
+			request = refDataService.createRequest( "HistoricalDataRequest" );
+			field = request.getElement( "fields" );
+			for (String f : fields) {
+				field.appendValue( f );
+			}
+			setRequestProperties( request, properties );
+		}
+		else {
+			throw new Exception( "Type support now is historical dividend and historical security" );
 		}
 
 		Element securities = request.getElement( "securities" );
@@ -124,7 +122,7 @@ public class BbgDataGrabber {
 		}
 	}
 
-	private HashMap<String, ? extends TimeSeries<? extends TimeUnit>> eventLoop(Session session, TSType type, List<String> fields,
+	private HashMap<String, ? extends TimeSeries<? extends TimeUnit>> eventLoop(Session session, RequestType type, Set<String> fields,
 			HashMap<String, Object> properties) throws Exception {
 		boolean done = false;
 		HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map = new HashMap<>();
@@ -154,7 +152,7 @@ public class BbgDataGrabber {
 
 	// ignore below comment by bbg, they said return true if blah blah blah and return void...
 	// return true if (processing is completed, false otherwise
-	private void processResponseEvent(Event event, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, TSType type, List<String> fields,
+	private void processResponseEvent(Event event, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, RequestType type, Set<String> fields,
 			HashMap<String, Object> properties) throws Exception {
 		MessageIterator msgIter = event.messageIterator();
 		while (msgIter.hasNext()) {
@@ -166,7 +164,7 @@ public class BbgDataGrabber {
 			}
 
 			Element security = msg.getElement( BbgNames.SECURITY_DATA );
-			if (type != TSType.HisSec) {
+			if (type != RequestType.Sec) {
 				for (int i = 0; i < security.numValues(); i++) {
 					extractSingleSecurityValue( security.getValueAsElement( i ),
 							map, type, fields, properties );
@@ -178,18 +176,18 @@ public class BbgDataGrabber {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void extractSingleSecurityValue(Element security, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, TSType type, List<String> fields,
-			HashMap<String, Object> properties) throws Exception {
+	private void extractSingleSecurityValue(Element security, HashMap<String, ? extends TimeSeries<? extends TimeUnit>> map, RequestType type,
+			Set<String> fields, HashMap<String, Object> properties) throws Exception {
 		String ticker = security.getElementAsString( BbgNames.SECURITY );
 		if (security.hasElement( "securityError" )) {
 			printErrorInfo( "\tSECURITY FAILED: ", security.getElement( BbgNames.SECURITY_ERROR ) );
 			return;
 		}
 
-		if (type == TSType.HisDiv) {
-			readHisDiv( security, (HashMap<String, HisDivTS>) map, ticker, fields, properties );
-		} else if (type == TSType.HisSec) {
-			readHistSec( security, (HashMap<String, HisSecTS>) map, ticker );
+		if (type == RequestType.Div) {
+			readHisDiv( security, (HashMap<String, HisDivTs>) map, ticker, fields, properties );
+		} else if (type == RequestType.Sec) {
+			readHistSec( security, (HashMap<String, HisSecTs>) map, ticker );
 		} else {
 			throw new Exception( "Now only support reading historical security time series" );
 		}
@@ -203,8 +201,8 @@ public class BbgDataGrabber {
 		}
 	}
 
-	private void readHistSec(Element security, Map<String, HisSecTS> map, String ticker) throws InstantiationException, IllegalAccessException {
-		HisSecTS tmp = new HisSecTS( ticker );
+	private void readHistSec(Element security, Map<String, HisSecTs> map, String ticker) throws InstantiationException, IllegalAccessException {
+		HisSecTs tmp = new HisSecTs( ticker );
 		if (security.hasElement( BbgNames.FIELD_DATA )) {
 			Element fields = security.getElement( BbgNames.FIELD_DATA );
 			if (fields.numValues() > 0) {
@@ -235,10 +233,9 @@ public class BbgDataGrabber {
 	}
 
 	/** current filter using fields and properties, for properties now only support filter out day period(start/end) */
-	private void readHisDiv(Element security, Map<String, HisDivTS> map,
-			String ticker, List<String> fields, HashMap<String, Object> properties) throws InstantiationException,
-			IllegalAccessException {
-		HisDivTS tmp = new HisDivTS( ticker );
+	private void readHisDiv(Element security, Map<String, HisDivTs> map, String ticker, Set<String> fields, HashMap<String, Object> properties)
+			throws InstantiationException, IllegalAccessException {
+		HisDivTs tmp = new HisDivTs( ticker );
 		if (security.hasElement( BbgNames.FIELD_DATA )) {
 			Element fieldss = security.getElement( BbgNames.FIELD_DATA )
 					.getElement( Fields.dvdHis );
@@ -248,10 +245,10 @@ public class BbgDataGrabber {
 					String date = DateUtils.standardFromBbgDate( fieldData.getElementAsDate( Fields.declaredDate ).toString() );
 					/* filter out day period (start/end) */
 					if (properties.containsKey( "start" )) {
-						if (DateUtils.compare( date, DateUtils.standardFromyyyyMMdd((String) properties.get( "start" )) ) < 0) continue;
+						if (DateUtils.compare( date, DateUtils.standardFromyyyyMMdd( (String) properties.get( "start" ) ) ) < 0) continue;
 					}
 					if (properties.containsKey( "end" )) {
-						if (DateUtils.compare( DateUtils.standardFromyyyyMMdd((String) properties.get( "end" )), date ) < 0) continue;
+						if (DateUtils.compare( DateUtils.standardFromyyyyMMdd( (String) properties.get( "end" ) ), date ) < 0) continue;
 					}
 					tmp.setDeclareDate( date );
 
@@ -273,26 +270,25 @@ public class BbgDataGrabber {
 		}
 		map.put( ticker, tmp );
 	}
-	
-	private void printErrorInfo(String leadingStr, Element errorInfo)
-			throws Exception {
+
+	private void printErrorInfo(String leadingStr, Element errorInfo) throws Exception {
 		System.out.println( leadingStr
 				+ errorInfo.getElementAsString( BbgNames.CATEGORY ) + " ("
 				+ errorInfo.getElementAsString( BbgNames.MESSAGE ) + ")" );
 	}
-	
-	/** lookup information */
-	public List<SecurityLookUpResult> securityLookUp(List<String> args) throws Exception {
+
+	/** Lookup information */
+	public synchronized List<SecurityLookUpResult> securityLookUp(List<String> args) throws Exception {
 		return (new SecurityLookupExample().run( _session, args.toArray( new String[ args.size() ] ) ));
 	}
-	
-	/** get reference data */
-	public List<? extends TimeUnit> getRefData(String t, List<String> names, List<String> fields) throws Exception {
+
+	/** Get reference data */
+	public synchronized List<? extends TimeUnit> getRefData(RequestType t, Set<String> names, Set<String> fields) throws Exception {
 		return (new RefDataExample().run( _session, t, names, fields ));
 	}
-	
+
 	public void testRefData() {}
-	
+
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws Exception {
 		BbgDataGrabber grabber = new BbgDataGrabber();
@@ -304,22 +300,22 @@ public class BbgDataGrabber {
 		properties.put( BbgNames.Properties.RETEID, Boolean.TRUE );
 		properties.put( BbgNames.Properties.MAX_POINTS, BbgNames.Properties.maxDataPoints );
 
-		List<String> name = Arrays.asList( "MSFT US EQUITY", "GS US EQUITY" );
-		List<String> fields = Arrays.asList( Fields.last, Fields.open );
-		HashMap<String, HisSecTS> res = (HashMap<String, HisSecTS>) grabber.getTSData( "HisSec", name, fields, properties );
+		Set<String> name = new HashSet<>(Arrays.asList( "MSFT US EQUITY", "GS US EQUITY" ));
+		Set<String> fields = new HashSet<>(Arrays.asList( Fields.last, Fields.open ));
+		HashMap<String, HisSecTs> res = (HashMap<String, HisSecTs>) grabber.getTsData( RequestType.Sec, name, fields, properties );
 
 		for (String n : name) {
-			HisSecTS ts = res.get( n );
+			HisSecTs ts = res.get( n );
 			for (String d : ts.getDates()) {
 				System.out.println( d + "(last):" + ts.getLast( d ) );
 				System.out.println( d + "(open):" + ts.getOpen( d ) );
 			}
 		}
 
-		HashMap<String, HisDivTS> res2 = (HashMap<String, HisDivTS>) grabber.getTSData( "HisDiv", name, Arrays.asList( Fields.dvdHis ), null );
+		HashMap<String, HisDivTs> res2 = (HashMap<String, HisDivTs>) grabber.getTsData( RequestType.Div, name, (Set<String>) new HashSet<>(Arrays.asList( Fields.dvdHis )), null );
 
 		for (String n : name) {
-			HisDivTS ts = res2.get( n );
+			HisDivTs ts = res2.get( n );
 			for (String d : ts.getDates()) {
 				System.out.println( d + "(exDate):" + ts.getExDate( d ) );
 				System.out.println( d + "(Type):" + ts.getType( d ) );
