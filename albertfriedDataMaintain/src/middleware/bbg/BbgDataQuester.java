@@ -46,7 +46,7 @@ import bbgRequestor.bloomberg.beans.TimeUnit;
  */
 public class BbgDataQuester implements MessageListener {
 	/* JMS stuff */
-	protected static String							_brokerURL			= "tcp://10.0.0.155:61616";
+	protected static String							_brokerURL			= "tcp://10.0.0.182:61616";
 	protected static ActiveMQConnectionFactory		_factory;
 	protected Connection							_connection;
 	protected Session								_session;
@@ -59,7 +59,7 @@ public class BbgDataQuester implements MessageListener {
 	private String									_id;											// id for this quester
 
 	/* replying data */
-	private HashMap<String, I_ResultContainer<?>>	_results;		// HashMap<MessageId, ResultContainer>, messageId indicates which quest is this
+	private HashMap<String, I_ResultContainer<?>>	_results;		// HashMap<correlationId, ResultContainer>, correlationId indicates which quest is this
 
 	/***********************************************************************
 	 * Constructor
@@ -106,7 +106,7 @@ public class BbgDataQuester implements MessageListener {
 	 * Publish a bbg data request on historical data
 	 * @throws Exception
 	 */
-	public void publishHisQuest(RequestType type, Set<String> names, Set<String> fields, HashMap<String, Object> properties, HistoricalResultContainer container)
+	public void publishHisQuest(RequestType type, List<String> names, Set<String> fields, HashMap<String, Object> properties, HistoricalResultContainer container)
 			throws Exception {
 		Destination resultQueue = _session.createTemporaryQueue();
 		final MessageConsumer dataResultReceiver = _session.createConsumer( resultQueue );
@@ -118,11 +118,12 @@ public class BbgDataQuester implements MessageListener {
 		// for historical quest, send by every 10 stocks
 		Set<String> s = new HashSet<>();
 		int i = 0;
-		for (String stock : names) {
+		for (int q = 0; q < names.size(); q++) {
+			String stock = names.get( q );
 			// send every 10 stocks
 			if (++i < 10) {
 				s.add( stock );
-				continue;
+				if (q < names.size() - 1) continue;
 			}
 			DataRequest request = new DataRequest( type, s, fields, properties );
 
@@ -130,8 +131,7 @@ public class BbgDataQuester implements MessageListener {
 				final ObjectMessage msg = _session.createObjectMessage( request );
 				msg.setJMSType( "Historical" );
 				msg.setJMSReplyTo( resultQueue );
-				msg.setJMSCorrelationID( _id );
-				msg.setJMSMessageID( msgId );
+				msg.setJMSCorrelationID( msgId );
 				_dataRequestSender.send( msg );
 			} catch (final JMSException e) {
 				e.printStackTrace();
@@ -149,7 +149,7 @@ public class BbgDataQuester implements MessageListener {
 	 * @return
 	 * @throws Exception
 	 */
-	public void publishRefQuest(RequestType type, Set<String> names, Set<String> fields, RefResultContainer container) throws Exception {
+	public void publishRefQuest(RequestType type, List<String> names, Set<String> fields, RefResultContainer container) throws Exception {
 		Destination resultQueue = _session.createTemporaryQueue();
 		final MessageConsumer dataResultReceiver = _session.createConsumer( resultQueue );
 		dataResultReceiver.setMessageListener( this );
@@ -160,11 +160,12 @@ public class BbgDataQuester implements MessageListener {
 		// for reference quest, send by every 20 stocks
 		Set<String> s = new HashSet<>();
 		int i = 0;
-		for (String stock : names) {
+		for (int q = 0; q < names.size(); q++) {
+			String stock = names.get( q );
 			// send every 100 stocks
-			if (++i < 200) {
+			if (++i < 100) {
 				s.add( stock );
-				continue;
+				if (q < names.size() - 1 ) continue;
 			}
 			DataRequest request = new DataRequest( type, s, fields, null );
 
@@ -172,8 +173,7 @@ public class BbgDataQuester implements MessageListener {
 				final ObjectMessage msg = _session.createObjectMessage( request );
 				msg.setJMSType( "Reference" );
 				msg.setJMSReplyTo( resultQueue ); // set return queue
-				msg.setJMSCorrelationID( _id );
-				msg.setJMSMessageID( msgId );
+				msg.setJMSCorrelationID( msgId );
 				_dataRequestSender.send( msg );
 			} catch (final JMSException e) {
 				e.printStackTrace();
@@ -206,8 +206,7 @@ public class BbgDataQuester implements MessageListener {
 			final ObjectMessage msg = _session.createObjectMessage( request );
 			msg.setJMSType( "Lookup" );
 			msg.setJMSReplyTo( resultQueue );
-			msg.setJMSCorrelationID( _id );
-			msg.setJMSMessageID( msgId );
+			msg.setJMSCorrelationID( msgId );
 			_dataRequestSender.send( msg );
 		} catch (final JMSException e) {
 			e.printStackTrace();
@@ -236,14 +235,8 @@ public class BbgDataQuester implements MessageListener {
 	public void onMessage(final Message msg) {
 		try {
 			final ObjectMessage message = (ObjectMessage) msg;
-			System.out.println( "Receive a msg of type " + message.getJMSType() );
-
-			if (!msg.getJMSCorrelationID().equals( _id )) {
-				System.out.println( "This msg is not for me, will ignore it" );
-				return;
-			}
-
-			String messageId = msg.getJMSMessageID();
+			String messageId = msg.getJMSCorrelationID();
+			System.out.println( "Receive a msg of type " + message.getJMSType() + " with id " + messageId );
 
 			switch (message.getJMSType()) {
 				case "Historical":
@@ -333,6 +326,7 @@ public class BbgDataQuester implements MessageListener {
 		_connectionRequestSender.send( msg );
 
 		close();
+		System.out.println("Closed. Bye");
 	}
 
 	/***********************************************************************
@@ -347,16 +341,16 @@ public class BbgDataQuester implements MessageListener {
 		try {
 			int i = 1;
 			String[] split = StringUtils.arrayTrimQuotes( StringUtils.splitWIthQuotes( line ) );
-			Set<String> names;
+			List<String> names;
 			Set<String> fields;
 			String type;
 			I_ResultContainer<?> container;
 			switch (split[ 0 ]) {
 				case "historical":
 					type = split[ i++ ];
-					names = new HashSet<>( Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) );
+					names = Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) ;
 					fields = new HashSet<>( Arrays.asList( StringUtils.arrayTrim( StringUtils.arrayToUpper( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) ) );
-					container = new HistoricalResultContainer( type, names );
+					container = new HistoricalResultContainer( type, new HashSet<>(names) );
 					this.publishHisQuest( RequestType.getType( type ), names, fields, parseProperties( split[ i++ ].replace( "\"", "" ).split( "," ) ),
 							(HistoricalResultContainer) container );
 					while (container.isFinished() == 0) {
@@ -376,9 +370,9 @@ public class BbgDataQuester implements MessageListener {
 					break;
 				case "reference":
 					type = split[ i++ ];
-					names = new HashSet<>( Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) );
+					names = Arrays.asList( StringUtils.arrayTrim( split[ i++ ].replace( "\"", "" ).split( "," ) )) ;
 					fields = new HashSet<>( Arrays.asList( StringUtils.arrayTrim( StringUtils.arrayToUpper( split[ i++ ].replace( "\"", "" ).split( "," ) ) ) ) );
-					container = new RefResultContainer( type, names );
+					container = new RefResultContainer( type, new HashSet<>(names) );
 					this.publishRefQuest( RequestType.getType( type ), names, fields, (RefResultContainer) container );
 					while (container.isFinished() == 0) {
 						Thread.sleep( 3000 );
@@ -457,8 +451,8 @@ public class BbgDataQuester implements MessageListener {
 		System.out.println( "Usage:" );
 		System.out.println( "Bloomberg data grabber." );
 		System.out
-				.println( "historical type(sec or div) \"names seperated by ,\" \"fields seperated by ,\" \"properties pairs(name:prop) seperated by ,\" or" );
-		System.out.println( "reference type(sec or div) \"names seperated by ,\" \"fields seperated by ,\" or" );
+				.println( "historical type(sec or div) \"names seperated by , no duplicates or error might happen\" \"fields seperated by ,\" \"properties pairs(name:prop) seperated by ,\" or" );
+		System.out.println( "reference type(sec or div) \"names seperated by , no duplicates or error might happen\" \"fields seperated by ,\" or" );
 
 		/** {@link bbgRquestor.bloomberg.blpapi.examples.SecurityLookupExample} */
 		System.out.println( "lookup args(see bbgRquestor.bloomberg.blpapi.examples.SecurityLookupExample) or" );

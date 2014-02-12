@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,7 +84,7 @@ public class OptionableStocks extends BbgExporterBase {
 	@SuppressWarnings("unchecked")
 	private void bbgGetStockWithNearDiv(HashMap<String, DividendTimeUnit> stockWithNearDiv, String inFile, String outFile) throws Exception {
 		/* get optionable stock names */
-		Set<String> stocks = getOptionableStocks( inFile );
+		Set<String> stocks = getOptionableStockNames( inFile );
 
 		/* get their div data from bbg */
 		try {
@@ -93,7 +94,9 @@ public class OptionableStocks extends BbgExporterBase {
 			writer.append( "Symbol,DVD_EX_DT,LAST_DPS_GROSS,BDVD_NEXT_EST_EX_DT,BDVD_PROJ_DIV_AMT,Close\n" );
 
 			RefResultContainer container = new RefResultContainer( RequestType.Div, stocks );
-			_quester.publishRefQuest( RequestType.Div, stocks, new HashSet<String>( Arrays.asList( _fields ) ), container );
+			List<String> tmp = new ArrayList<>();
+			tmp.addAll( stocks);
+			_quester.publishRefQuest( RequestType.Div, tmp, new HashSet<String>( Arrays.asList( _fields ) ), container );
 
 			while (container.isFinished() == 0) {
 				Thread.sleep( 3000 );
@@ -127,7 +130,7 @@ public class OptionableStocks extends BbgExporterBase {
 		}
 	}
 
-	private Set<String> getOptionableStocks(String localFile) throws IOException {
+	private Set<String> getOptionableStockNames(String localFile) throws IOException {
 		Set<String> res = new HashSet<>();
 
 		BufferedReader in = null;
@@ -164,11 +167,11 @@ public class OptionableStocks extends BbgExporterBase {
 		return (ParseDate.compare( tu.getExDate(), ParseDate.twoDaysLater ) <= 0 && ParseDate.compare( tu.getExDate(), ParseDate.today ) > 0);
 	}
 
-	/** get options from databse given type */
+	/** get options from database given type */
 	private LinkedList<Option> getOptionsFromDb(String type) {
 		LinkedList<Option> res = new LinkedList<>();
 		final String query = "SELECT [TradingSymbol], [Underlying], [Maturity], [Strike], [PutCall] from [clearing].[dbo].[GSECPositions] " +
-				" where [PutCall] = '" + type + "' and [ImportedDate] = '" + ParseDate.today + "' and [TDQuantity] > 0";
+				" where [PutCall] = '" + type + "' and [ImportedDate] = '" + ParseDate.today + "' and [TDQuantity] > 0"; // notice we filter out qty<=0 options
 
 		try (Statement stmt = _conn.createStatement()) {
 
@@ -202,9 +205,11 @@ public class OptionableStocks extends BbgExporterBase {
 			if (o.getSymbol().contains( "TEST" )) {
 				// System.out.println("in");
 			}
-			// don't need options not have dividend in the near future nor out of money
-			if (!namesInStockWithNearDiv.contains( o.getUnderlying() ) || !itm( o, stockWithNearDiv, type )) {
+			// don't need options not have dividend in the near future nor out of money nor negative quantity
+			if (!namesInStockWithNearDiv.contains( o.getUnderlying() ) || !itm( o, stockWithNearDiv, type ) ) {
 				iterator.remove();
+			} else{
+				o.setExDate( stockWithNearDiv.get( o.getUnderlying() ).getExDate() );
 			}
 		}
 	}
@@ -222,7 +227,7 @@ public class OptionableStocks extends BbgExporterBase {
 			case "P":
 				return o.getStrike() > Double.parseDouble( stockWithNearDiv.get( o.getUnderlying() ).getExtra() );
 			default:
-				throw new Exception( "option type should be either C or P" );
+				throw new Exception( "option type should be either C or P: symbol(" + o.getSymbol() + "), underlying(" + o.getUnderlying() + ")" );
 		}
 	}
 
@@ -231,7 +236,7 @@ public class OptionableStocks extends BbgExporterBase {
 		try {
 			final FileWriter writer = new FileWriter( outFile );
 			// header
-			writer.append( "Symbol,Underlying,Maturity,Strike,PutCall\n" );
+			writer.append( "Symbol,Underlying,Maturity,Strike,PutCall,ExDate\n" );
 
 			for (Option option : options) {
 				writer.append( option.getSymbol() );
@@ -243,6 +248,8 @@ public class OptionableStocks extends BbgExporterBase {
 				writer.append( StringUtils.numberToStringWithoutZeros( option.getStrike() ) );
 				writer.append( ',' );
 				writer.append( option.getPutCall() );
+				writer.append( ',' );
+				writer.append( option.getExDate() );
 				writer.append( '\n' );
 			}
 

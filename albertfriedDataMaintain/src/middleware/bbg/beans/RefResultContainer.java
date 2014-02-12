@@ -30,14 +30,17 @@ public class RefResultContainer implements I_ResultContainer<ArrayList<? extends
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void receiveSolution(ArrayList<? extends TimeUnit> solution) throws Exception {
+	public synchronized void receiveSolution(ArrayList<? extends TimeUnit> solution) throws Exception {
 		if (_type == RequestType.Div) {
 			((ArrayList<DividendTimeUnit>) _solutions).addAll( (ArrayList<DividendTimeUnit>) solution );
 		} else if (_type == RequestType.Sec) {
 			((ArrayList<SecurityTimeUnit>) _solutions).addAll( (ArrayList<SecurityTimeUnit>) solution );
 		} else throw new Exception( "Ref type should be either div or sec" );
 		for (TimeUnit tu : solution) {
+			if (tu.getName().equals( "CTT US Equity" )) System.out.println("CTT found");
 			_underlyings.remove( tu.getName() );
+			System.out.println("CTT removed");
+			System.out.println(_underlyings.contains( "CTT US Equity" ));
 		}
 		if (_underlyings.isEmpty()) {
 			_finished = 1;

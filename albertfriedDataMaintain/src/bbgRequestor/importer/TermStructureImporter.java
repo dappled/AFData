@@ -2,6 +2,7 @@ package bbgRequestor.importer;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,9 @@ public class TermStructureImporter extends BbgImporterBase {
 		/** ask client for yield curve data */
 		Set<String> stocks = new HashSet<>( Arrays.asList( _names ) );
 		RefResultContainer container = new RefResultContainer( RequestType.Div, stocks );
-		_quester.publishRefQuest( RequestType.Sec, stocks, new HashSet<String>( Arrays.asList( _fields ) ), container );
+		List<String> tmp = new ArrayList<>();
+		tmp.addAll( stocks);
+		_quester.publishRefQuest( RequestType.Sec, tmp, new HashSet<String>( Arrays.asList( _fields ) ), container );
 
 		while (container.isFinished() == 0) {
 			Thread.sleep( 3000 );

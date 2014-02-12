@@ -39,7 +39,7 @@ public class BbgDataQuestResponser {
 	/* JMS stuff */
 	// I use async sends for performance reason
 	protected BrokerService						_broker;
-	protected static String						_brokerURL			= "tcp://10.0.0.155:61616";
+	protected static String						_brokerURL			= "tcp://10.0.0.182:61616";
 	protected static ActiveMQConnectionFactory	_factory;
 	protected Connection						_connection;
 	protected Session							_session;
@@ -70,7 +70,7 @@ public class BbgDataQuestResponser {
 		_broker = new BrokerService();
 		// configure the broker
 		_broker.setBrokerName( "VineyardBbgDataCenter" );
-		_broker.addConnector( "tcp://10.0.0.155:61616" );
+		_broker.addConnector( _brokerURL );
 		_broker.start();
 		System.out.println( "Broker is up" );
 
@@ -156,7 +156,7 @@ public class BbgDataQuestResponser {
 		@Override
 		public void run() {
 			try {
-				System.out.println( "Receive a request of type " + msg.getJMSType() + "from " + msg.getJMSCorrelationID() );
+				System.out.println( "Receive a request of type " + msg.getJMSType() + "with id " + msg.getJMSCorrelationID() );
 			} catch (JMSException e1) {
 				e1.printStackTrace();
 			}
@@ -166,8 +166,7 @@ public class BbgDataQuestResponser {
 					ObjectMessage re = _session.createObjectMessage();
 					re.setJMSType( msg.getJMSType() );
 					re.setJMSCorrelationID( msg.getJMSCorrelationID() );
-					re.setJMSMessageID( msg.getJMSMessageID() );
-
+					
 					DataRequest request;
 					Set<String> names, fields;
 					RequestType t;
@@ -179,24 +178,24 @@ public class BbgDataQuestResponser {
 								names = request.getNames();
 								fields = request.getFields();
 								HashMap<String, Object> properties = request.getProperties();
-								// System.out.println( "Start getting data from bbg" );
+								System.out.println( "Start getting data from bbg" );
 								re.setObject( _grabber.getTsData( t, names, fields, properties ) );
-								// System.out.println( "Finished getting data from bbg" );
+								System.out.println( "Finished getting data from bbg" );
 								break;
 							case "Reference":
 								request = (DataRequest) ((ObjectMessage) msg).getObject();
 								t = request.getType();
 								names = request.getNames();
 								fields = request.getFields();
-								// System.out.println( "Start getting data from bbg" );
+								System.out.println( "Start getting data from bbg" );
 								re.setObject( (Serializable) _grabber.getRefData( t, names, fields ) );
-								// System.out.println( "Finished getting data from bbg" );
+								System.out.println( "Finished getting data from bbg" );
 								break;
 							case "Lookup":
 								SecurityLookupRequest requestLookUp = (SecurityLookupRequest) ((ObjectMessage) msg).getObject();
-								// System.out.println( "Start getting data from bbg" );
+								System.out.println( "Start getting data from bbg" );
 								re.setObject( (Serializable) _grabber.securityLookUp( requestLookUp.getArgs() ) );
-								// System.out.println( "Finished getting data from bbg" );
+								System.out.println( "Finished getting data from bbg" );
 								break;
 							case "Test":
 								System.out.println( "Strat testing" );
@@ -276,6 +275,7 @@ public class BbgDataQuestResponser {
 				}
 			}
 		} );
+		System.out.println("Start listening to questers");
 	}
 
 	public static void main(String[] args) throws Exception {

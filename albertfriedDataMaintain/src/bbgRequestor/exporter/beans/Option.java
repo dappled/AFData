@@ -11,7 +11,9 @@ public class Option extends RealBasic{
 	private final String _underlying, _putCall;
 	private final Date _maturity;
 	private final Double _strike;
-	
+	private String _exDate;
+
+
 	public Option(String symbol, String underlying, Date maturity, double strike, String putCall ) {
 		super( symbol );
 		_underlying = underlying;
@@ -36,6 +38,15 @@ public class Option extends RealBasic{
 		return _strike;
 	}
 
+	
+	public String getExDate() {
+		return _exDate;
+	}
+
+	public void setExDate(String exDate) {
+		this._exDate = exDate;
+	}
+	
 	@Override
 	public void writeCSV(FileWriter out) throws IOException {}
 

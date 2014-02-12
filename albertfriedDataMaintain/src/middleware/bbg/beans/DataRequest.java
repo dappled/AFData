@@ -36,6 +36,17 @@ public class DataRequest implements Serializable {
 			}
 		}
 
+		@Override 
+		public boolean equals(Object obj) {
+	        if (obj == null)
+	            return false;
+	        if (obj == this)
+	            return true;
+	        if (!(obj instanceof RequestType))
+	            return false;
+	        return ((RequestType) obj).toString().equals( toString() );
+		}
+		
 		@Override
 		public String toString() {
 			return _type;
@@ -70,5 +81,10 @@ public class DataRequest implements Serializable {
 
 	public HashMap<String, Object> getProperties() {
 		return _properties;
+	}
+	
+	public static void main(String[] args) {
+		RequestType r = new RequestType( "div" );
+		System.out.println(r.equals( RequestType.Div));
 	}
 } 

@@ -73,18 +73,18 @@ public class RefDataExample
 		while (!done) {
 			Event event = session.nextEvent();
 			if (event.eventType() == Event.EventType.PARTIAL_RESPONSE) {
-				System.out.println( "Processing Partial Response" );
+				//System.out.println( "Processing Partial Response" );
 				processResponseEvent( event, list );
 			}
 			else if (event.eventType() == Event.EventType.RESPONSE) {
-				System.out.println( "Processing Response" );
+				//System.out.println( "Processing Response" );
 				processResponseEvent( event, list );
 				done = true;
 			} else {
 				MessageIterator msgIter = event.messageIterator();
 				while (msgIter.hasNext()) {
 					Message msg = msgIter.next();
-					System.out.println( msg.asElement() );
+					//System.out.println( msg.asElement() );
 					if (event.eventType() == Event.EventType.SESSION_STATUS) {
 						if (msg.messageType().equals( "SessionTerminated" ) ||
 								msg.messageType().equals( "SessionStartupFailure" )) {
@@ -108,14 +108,14 @@ public class RefDataExample
 
 			Element securities = msg.getElement( SECURITY_DATA );
 			int numSecurities = securities.numValues();
-			System.out.println( "Processing " + numSecurities + " securities:" );
+			//System.out.println( "Processing " + numSecurities + " securities:" );
 			for (int i = 0; i < numSecurities; ++i) {
 				Element security = securities.getValueAsElement( i );
 				String ticker = security.getElementAsString( SECURITY );
 
-				if (_type==RequestType.Div) {
+				if (_type.equals( RequestType.Div )) {
 					readDiv( security, (List<DividendTimeUnit>) list, ticker );
-				} else if (_type==RequestType.Sec) {
+				} else if (_type.equals( RequestType.Sec )) {
 					readSec( security, (List<SecurityTimeUnit>) list, ticker );
 				}
 				else throw new Exception( "Type of reference should be sec or div" );
@@ -132,11 +132,11 @@ public class RefDataExample
 			Element fields = security.getElement( FIELD_DATA );
 			SecurityTimeUnit tmp = new SecurityTimeUnit( ticker );
 
-			/* try {
-			 * System.out.println( fields );
-			 * } catch (Exception e) {
-			 * System.out.println( "Can't print fields:" + e );
-			 * } */
+			/*try {
+				System.out.println( fields );
+			} catch (Exception e) {
+				System.out.println( "Can't print fields:" + e );
+			}*/
 			if (fields.hasElement( Fields.open )) tmp.setOpen( fields.getElementAsFloat64( Fields.open ) );
 			if (fields.hasElement( Fields.close )) tmp.setClose( fields.getElementAsFloat64( Fields.close ) );
 			if (fields.hasElement( Fields.high )) tmp.setHigh( fields.getElementAsFloat64( Fields.high ) );
@@ -230,7 +230,7 @@ public class RefDataExample
 			fieldss.appendValue( field );
 		}
 
-		System.out.println( "Sending Request: " + request );
+		//System.out.println( "Sending Request: " + request );
 		session.sendRequest( request, null );
 	}
 

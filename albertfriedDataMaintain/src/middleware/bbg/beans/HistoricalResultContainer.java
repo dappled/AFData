@@ -31,7 +31,7 @@ public class HistoricalResultContainer implements I_ResultContainer<HashMap<Stri
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void receiveSolution(HashMap<String, ? extends TimeSeries<? extends TimeUnit>> solution) throws Exception {
+	public synchronized void receiveSolution(HashMap<String, ? extends TimeSeries<? extends TimeUnit>> solution) throws Exception {
 		if (_type == RequestType.Div) {
 			((HashMap<String, HisDivTs>) _solutions).putAll( (HashMap<String, HisDivTs>) solution );
 		} else if (_type == RequestType.Sec) {
