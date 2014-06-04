@@ -1,0 +1,7 @@
+historical sec "gs us equity, c us equity" "px_last,px_ask,px_bid,px_high,px_open,px_low,px_close,volume,pe_ratio,eqt_sh_out,eqt_weighted_avg_px,eeps_cur_qtr,3mo_call_imp_vol,3mo_put_imp_vol" "start:20110101,end:20130101,period:monthly"
+historical div "gs us equity, c us equity" "exdate,recorddate,payabledate,divamount,divfreq,divtype" "start:20110101,end:20130101"
+lookup -r instrumentListRequest -s gs
+lookup -r curveListRequest -s ois
+lookup -r govtListRequest -s "us treasury"
+
+client.jar (file://PROP-RN/Users/rn.ALBERTFRIED/git/AFData/client.jar)
